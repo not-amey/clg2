@@ -41,12 +41,12 @@ const resetPasswordRules = [
 const studentRules = [
     body('roll_number').trim().notEmpty().withMessage('Roll number is required.').escape(),
     body('full_name').trim().notEmpty().withMessage('Full name is required.').escape(),
-    body('email').trim().isEmail().withMessage('Valid email is required.').normalizeEmail(),
+    body('email').optional({ checkFalsy: true }).trim().isEmail().withMessage('Valid email format required.').normalizeEmail(),
     body('phone').optional({ checkFalsy: true }).trim().escape(),
     body('department_id').isInt().withMessage('Department ID must be an integer.'),
-    body('semester').isInt({ min: 1, max: 10 }).withMessage('Semester must be between 1 and 10.'),
+    body('semester').optional({ checkFalsy: true }).isInt({ min: 1, max: 10 }).withMessage('Semester must be between 1 and 10.'),
     body('enrollment_year').isInt({ min: 2000, max: 2100 }).withMessage('Valid enrollment year required.'),
-    body('status').optional().isIn(['active', 'graduated', 'suspended']).withMessage('Invalid status.')
+    body('status').optional().isIn(['active', 'suspended']).withMessage('Invalid status.')
 ];
 
 // 3. Faculty Validation Rules

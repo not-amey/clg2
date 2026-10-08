@@ -145,17 +145,16 @@ async function loadStudents(page = 1) {
                 <td><strong>${s.roll_number}</strong></td>
                 <td>
                     <div style="font-weight: 600;">${s.full_name}</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted);">${s.email}</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">${s.email || (s.phone ? 'Phone: ' + s.phone : 'No Contact Info')}</div>
                 </td>
                 <td>${s.department_name || 'Unassigned'}</td>
-                <td>Semester ${s.semester}</td>
                 <td><span class="badge badge-${s.status}">${s.status}</span></td>
                 <td>
                     ${s.document_path ? `<a href="${s.document_path}" target="_blank" class="btn btn-sm btn-secondary"><i class="fas fa-file-pdf"></i> Doc</a>` : '<span style="color: var(--text-dim);">None</span>'}
                 </td>
                 <td>
                     <div style="display: flex; gap: 0.35rem;">
-                        <button class="btn btn-sm btn-secondary" onclick="editStudent(${s.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-secondary" onclick="openStudentModal(${s.id})"><i class="fas fa-edit"></i> Edit</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id}, '${s.full_name}')" data-role-required="super_admin"><i class="fas fa-trash"></i></button>
                     </div>
                 </td>
@@ -168,6 +167,10 @@ async function loadStudents(page = 1) {
     }
 }
 
+function editStudent(id) {
+    openStudentModal(id);
+}
+
 function openStudentModal(id = null) {
     document.getElementById('student-form').reset();
     document.getElementById('student-id').value = id || '';
@@ -177,14 +180,16 @@ function openStudentModal(id = null) {
         apiRequest(`/api/students/${id}`).then(res => {
             if (res.success) {
                 const s = res.data;
-                document.getElementById('modal-student-roll').value = s.roll_number;
-                document.getElementById('modal-student-name').value = s.full_name;
-                document.getElementById('modal-student-email').value = s.email;
+                document.getElementById('modal-student-roll').value = s.roll_number || '';
+                document.getElementById('modal-student-name').value = s.full_name || '';
+                document.getElementById('modal-student-email').value = s.email || '';
                 document.getElementById('modal-student-phone').value = s.phone || '';
                 document.getElementById('modal-student-dept').value = s.department_id || '';
-                document.getElementById('modal-student-sem').value = s.semester;
-                document.getElementById('modal-student-year').value = s.enrollment_year;
-                document.getElementById('modal-student-status').value = s.status;
+                if (document.getElementById('modal-student-sem')) {
+                    document.getElementById('modal-student-sem').value = s.semester || 1;
+                }
+                document.getElementById('modal-student-year').value = s.enrollment_year || 2026;
+                document.getElementById('modal-student-status').value = s.status || 'active';
             }
         });
     }

@@ -30,11 +30,9 @@ async function seedDatabase() {
 
     // 2. Seed Departments
     const deptsToSeed = [
-        { code: 'CSE', name: 'Computer Science & Engineering', description: 'Department of Computer Science, Software Engineering and AI' },
-        { code: 'ECE', name: 'Electronics & Communication', description: 'Department of VLSI, Embedded Systems and Signals' },
-        { code: 'ME', name: 'Mechanical Engineering', description: 'Department of Robotics, Dynamics and Thermals' },
-        { code: 'CE', name: 'Civil Engineering', description: 'Department of Structural and Environmental Engineering' },
-        { code: 'MBA', name: 'Business Administration', description: 'Department of Finance, Marketing and Management' }
+        { code: 'SCI', name: 'Science', description: 'Faculty of Science' },
+        { code: 'COM', name: 'Commerce', description: 'Faculty of Commerce' },
+        { code: 'ART', name: 'Arts', description: 'Faculty of Arts' }
     ];
 
     for (const d of deptsToSeed) {

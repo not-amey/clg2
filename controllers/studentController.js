@@ -100,10 +100,17 @@ async function create(req, res) {
             document_path = await uploadToSupabase(req.file.buffer, req.file.originalname, req.file.mimetype, 'student_documents');
         }
 
+        const cleanEmail = email && email.trim() ? email.trim() : null;
+
+        let dupFilter = `roll_number.eq.${roll_number}`;
+        if (cleanEmail) {
+            dupFilter += `,email.eq.${cleanEmail}`;
+        }
+
         const { data: existing } = await supabase
             .from('students')
             .select('id')
-            .or(`roll_number.eq.${roll_number},email.eq.${email}`)
+            .or(dupFilter)
             .limit(1);
 
         if (existing && existing.length > 0) {
@@ -115,7 +122,7 @@ async function create(req, res) {
             .insert({
                 roll_number,
                 full_name,
-                email,
+                email: cleanEmail,
                 phone: phone || null,
                 department_id: department_id ? parseInt(department_id, 10) : null,
                 semester: parseInt(semester, 10) || 1,
@@ -158,10 +165,17 @@ async function update(req, res) {
             return error(res, 'Student not found.', 404);
         }
 
+        const cleanEmail = email && email.trim() ? email.trim() : null;
+
+        let dupFilter = `roll_number.eq.${roll_number}`;
+        if (cleanEmail) {
+            dupFilter += `,email.eq.${cleanEmail}`;
+        }
+
         const { data: duplicate } = await supabase
             .from('students')
             .select('id')
-            .or(`roll_number.eq.${roll_number},email.eq.${email}`)
+            .or(dupFilter)
             .neq('id', studentId)
             .limit(1);
 
@@ -179,12 +193,12 @@ async function update(req, res) {
             .update({
                 roll_number,
                 full_name,
-                email,
+                email: cleanEmail,
                 phone: phone || null,
                 department_id: department_id ? parseInt(department_id, 10) : null,
-                semester: parseInt(semester, 10),
-                enrollment_year: parseInt(enrollment_year, 10),
-                status,
+                semester: parseInt(semester, 10) || current.semester || 1,
+                enrollment_year: parseInt(enrollment_year, 10) || current.enrollment_year,
+                status: status || current.status,
                 document_path
             })
             .eq('id', studentId);
