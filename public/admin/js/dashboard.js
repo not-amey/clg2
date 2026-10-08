@@ -77,7 +77,7 @@ async function loadDepartments() {
 }
 
 function populateDepartmentSelects() {
-    const selects = ['filter-student-dept', 'modal-student-dept', 'filter-faculty-dept', 'modal-faculty-dept'];
+    const selects = ['filter-student-dept', 'modal-student-dept'];
     selects.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;

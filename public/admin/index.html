@@ -33,11 +33,7 @@
                         <i class="fas fa-user-graduate"></i> Students
                     </button>
                 </li>
-                <li class="nav-item">
-                    <button onclick="switchTab('faculty')">
-                        <i class="fas fa-chalkboard-teacher"></i> Faculty & Staff
-                    </button>
-                </li>
+
 
                 <li class="nav-item">
                     <button onclick="switchTab('cms')">
@@ -98,13 +94,7 @@
                                 <p>Total Enrolled Students</p>
                             </div>
                         </div>
-                        <div class="glass-card stat-card">
-                            <div class="stat-icon faculty"><i class="fas fa-chalkboard-teacher"></i></div>
-                            <div class="stat-info">
-                                <h3 id="stat-faculty">0</h3>
-                                <p>Faculty Members</p>
-                            </div>
-                        </div>
+
 
                         <div class="glass-card stat-card">
                             <div class="stat-icon admins"><i class="fas fa-user-shield"></i></div>
@@ -158,42 +148,7 @@
                     </div>
                 </section>
 
-                <!-- VIEW 3: FACULTY MANAGEMENT -->
-                <section id="view-faculty" class="view-section" style="display: none;">
-                    <div class="action-bar">
-                        <div class="filter-group">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="search-faculty" placeholder="Search by name, ID, email..." onkeyup="loadFaculty(1)">
-                            </div>
-                            <select id="filter-faculty-dept" class="select-control" onchange="loadFaculty(1)">
-                                <option value="">All Departments</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-primary" onclick="openFacultyModal()" data-role-required="super_admin,faculty_admin">
-                            <i class="fas fa-plus"></i> Add Faculty Member
-                        </button>
-                    </div>
 
-                    <div class="glass-card">
-                        <div class="table-responsive">
-                            <table class="custom-table">
-                                <thead>
-                                    <tr>
-                                        <th>Faculty Member</th>
-                                        <th>Designation</th>
-                                        <th>Department</th>
-                                        <th>Email</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="faculty-table-body"></tbody>
-                            </table>
-                        </div>
-                        <div id="faculty-pagination" class="pagination-container"></div>
-                    </div>
-                </section>
 
 
 
@@ -476,64 +431,7 @@
         </div>
     </div>
 
-    <!-- MODAL: Faculty Form -->
-    <div id="modal-faculty" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-faculty-title">Add Faculty Member</h3>
-                <button class="close-modal" onclick="closeModal('modal-faculty')">&times;</button>
-            </div>
-            <form id="faculty-form" onsubmit="saveFaculty(event)">
-                <input type="hidden" id="faculty-id" name="id">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Faculty ID Number *</label>
-                        <input type="text" id="modal-faculty-num" name="faculty_id_num" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Full Name *</label>
-                        <input type="text" id="modal-faculty-name" name="full_name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Email Address *</label>
-                        <input type="email" id="modal-faculty-email" name="email" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Phone</label>
-                        <input type="text" id="modal-faculty-phone" name="phone" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label>Department</label>
-                        <select id="modal-faculty-dept" name="department_id" class="form-control"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Designation *</label>
-                        <input type="text" id="modal-faculty-desig" name="designation" class="form-control" placeholder="Professor / Assistant Prof" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Qualification</label>
-                        <input type="text" id="modal-faculty-qual" name="qualification" class="form-control" placeholder="Ph.D. in Computer Science">
-                    </div>
-                    <div class="form-group">
-                        <label>Status *</label>
-                        <select id="modal-faculty-status" name="status" class="form-control">
-                            <option value="active">Active</option>
-                            <option value="on_leave">On Leave</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                    <div class="form-group full-width">
-                        <label>Faculty Photo (JPG / PNG)</label>
-                        <input type="file" name="photo" class="form-control" accept=".png,.jpg,.jpeg">
-                    </div>
-                </div>
-                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-faculty')">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Faculty</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
 
 
