@@ -1,4 +1,4 @@
-const { generateSecret, generateURI, verifySync } = require('otplib');
+const { authenticator } = require('otplib');
 const QRCode = require('qrcode');
 
 /**
@@ -8,12 +8,8 @@ const QRCode = require('qrcode');
  */
 async function generate2FASecret(username) {
     const serviceName = 'College Admin Portal';
-    const secret = generateSecret();
-    const otpauthUrl = generateURI({
-        secret,
-        label: username,
-        issuer: serviceName
-    });
+    const secret = authenticator.generateSecret();
+    const otpauthUrl = authenticator.keyuri(username, serviceName, secret);
     const qrCodeUrl = await QRCode.toDataURL(otpauthUrl);
 
     return { secret, qrCodeUrl, otpauthUrl };
@@ -28,8 +24,7 @@ async function generate2FASecret(username) {
 function verify2FAToken(token, secret) {
     if (!token || !secret) return false;
     try {
-        const result = verifySync({ token, secret });
-        return Boolean(result && result.valid);
+        return authenticator.check(token, secret);
     } catch (e) {
         return false;
     }
@@ -39,3 +34,4 @@ module.exports = {
     generate2FASecret,
     verify2FAToken
 };
+
