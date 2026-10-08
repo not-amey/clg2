@@ -38,21 +38,7 @@
                         <i class="fas fa-chalkboard-teacher"></i> Faculty & Staff
                     </button>
                 </li>
-                <li class="nav-item">
-                    <button onclick="switchTab('courses')">
-                        <i class="fas fa-book-open"></i> Courses & Depts
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button onclick="switchTab('notices')">
-                        <i class="fas fa-bullhorn"></i> Notices & News
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button onclick="switchTab('applications')">
-                        <i class="fas fa-file-signature"></i> Admissions Apps
-                    </button>
-                </li>
+
                 <li class="nav-item">
                     <button onclick="switchTab('cms')">
                         <i class="fas fa-edit"></i> Website Content (CMS)
@@ -119,27 +105,7 @@
                                 <p>Faculty Members</p>
                             </div>
                         </div>
-                        <div class="glass-card stat-card">
-                            <div class="stat-icon courses"><i class="fas fa-book"></i></div>
-                            <div class="stat-info">
-                                <h3 id="stat-courses">0</h3>
-                                <p>Active Courses</p>
-                            </div>
-                        </div>
-                        <div class="glass-card stat-card">
-                            <div class="stat-icon notices"><i class="fas fa-bullhorn"></i></div>
-                            <div class="stat-info">
-                                <h3 id="stat-notices">0</h3>
-                                <p>Published Notices</p>
-                            </div>
-                        </div>
-                        <div class="glass-card stat-card">
-                            <div class="stat-icon apps"><i class="fas fa-file-alt"></i></div>
-                            <div class="stat-info">
-                                <h3 id="stat-apps">0</h3>
-                                <p>Pending Applications</p>
-                            </div>
-                        </div>
+
                         <div class="glass-card stat-card">
                             <div class="stat-icon admins"><i class="fas fa-user-shield"></i></div>
                             <div class="stat-info">
@@ -231,124 +197,7 @@
                     </div>
                 </section>
 
-                <!-- VIEW 4: COURSES MANAGEMENT -->
-                <section id="view-courses" class="view-section" style="display: none;">
-                    <div class="action-bar">
-                        <div class="filter-group">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="search-course" placeholder="Search course code or title..." onkeyup="loadCourses(1)">
-                            </div>
-                            <select id="filter-course-dept" class="select-control" onchange="loadCourses(1)">
-                                <option value="">All Departments</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-primary" onclick="openCourseModal()" data-role-required="super_admin,faculty_admin">
-                            <i class="fas fa-plus"></i> Add New Course
-                        </button>
-                    </div>
 
-                    <div class="glass-card">
-                        <div class="table-responsive">
-                            <table class="custom-table">
-                                <thead>
-                                    <tr>
-                                        <th>Course Code</th>
-                                        <th>Course Title</th>
-                                        <th>Department</th>
-                                        <th>Credits</th>
-                                        <th>Semester</th>
-                                        <th>Faculty Instructor</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="course-table-body"></tbody>
-                            </table>
-                        </div>
-                        <div id="course-pagination" class="pagination-container"></div>
-                    </div>
-                </section>
-
-                <!-- VIEW 5: NOTICES MANAGEMENT -->
-                <section id="view-notices" class="view-section" style="display: none;">
-                    <div class="action-bar">
-                        <div class="filter-group">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="search-notice" placeholder="Search notices..." onkeyup="loadNotices(1)">
-                            </div>
-                            <select id="filter-notice-category" class="select-control" onchange="loadNotices(1)">
-                                <option value="">All Categories</option>
-                                <option value="academic">Academic</option>
-                                <option value="examination">Examination</option>
-                                <option value="event">Event</option>
-                                <option value="admission">Admission</option>
-                                <option value="general">General</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-primary" onclick="openNoticeModal()">
-                            <i class="fas fa-bullhorn"></i> Post Announcement
-                        </button>
-                    </div>
-
-                    <div class="glass-card">
-                        <div class="table-responsive">
-                            <table class="custom-table">
-                                <thead>
-                                    <tr>
-                                        <th>Notice Title</th>
-                                        <th>Category</th>
-                                        <th>Priority</th>
-                                        <th>Target Audience</th>
-                                        <th>Attachment</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="notice-table-body"></tbody>
-                            </table>
-                        </div>
-                        <div id="notice-pagination" class="pagination-container"></div>
-                    </div>
-                </section>
-
-                <!-- VIEW 6: ADMISSIONS / APPLICATIONS -->
-                <section id="view-applications" class="view-section" style="display: none;">
-                    <div class="action-bar">
-                        <div class="filter-group">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="search-app" placeholder="Search applicant name or app no..." onkeyup="loadApplications(1)">
-                            </div>
-                            <select id="filter-app-status" class="select-control" onchange="loadApplications(1)">
-                                <option value="">All Statuses</option>
-                                <option value="pending">Pending</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
-                                <option value="under_review">Under Review</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="glass-card">
-                        <div class="table-responsive">
-                            <table class="custom-table">
-                                <thead>
-                                    <tr>
-                                        <th>App No.</th>
-                                        <th>Applicant Name</th>
-                                        <th>Applied Department</th>
-                                        <th>Marks %</th>
-                                        <th>Status</th>
-                                        <th>Certificate</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="app-table-body"></tbody>
-                            </table>
-                        </div>
-                        <div id="app-pagination" class="pagination-container"></div>
-                    </div>
-                </section>
 
                 <!-- VIEW 7: SECURITY AUDIT LOGS -->
                 <section id="view-logs" class="view-section" style="display: none;">
@@ -693,136 +542,7 @@
         </div>
     </div>
 
-    <!-- MODAL: Course Form -->
-    <div id="modal-course" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-course-title">Add New Course</h3>
-                <button class="close-modal" onclick="closeModal('modal-course')">&times;</button>
-            </div>
-            <form id="course-form" onsubmit="saveCourse(event)">
-                <input type="hidden" id="course-id" name="id">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Course Code *</label>
-                        <input type="text" id="modal-course-code" class="form-control" placeholder="CS101" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Course Title *</label>
-                        <input type="text" id="modal-course-name" class="form-control" placeholder="Data Structures" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Department *</label>
-                        <select id="modal-course-dept" class="form-control" required></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Credits (1-10) *</label>
-                        <input type="number" id="modal-course-credits" min="1" max="10" value="4" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Semester (1-10) *</label>
-                        <input type="number" id="modal-course-sem" min="1" max="10" value="1" class="form-control" required>
-                    </div>
-                    <div class="form-group full-width">
-                        <label>Description</label>
-                        <textarea id="modal-course-desc" class="form-control" placeholder="Course syllabus summary..."></textarea>
-                    </div>
-                </div>
-                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-course')">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Course</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <!-- MODAL: Notice Form -->
-    <div id="modal-notice" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Post Announcement / Notice</h3>
-                <button class="close-modal" onclick="closeModal('modal-notice')">&times;</button>
-            </div>
-            <form id="notice-form" onsubmit="saveNotice(event)">
-                <input type="hidden" id="notice-id" name="id">
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label>Notice Title *</label>
-                        <input type="text" id="modal-notice-title" name="title" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Category *</label>
-                        <select id="modal-notice-cat" name="category" class="form-control" required>
-                            <option value="academic">Academic</option>
-                            <option value="examination">Examination</option>
-                            <option value="event">Event</option>
-                            <option value="admission">Admission</option>
-                            <option value="general">General</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Target Audience *</label>
-                        <select id="modal-notice-target" name="target_audience" class="form-control" required>
-                            <option value="all">All</option>
-                            <option value="students">Students</option>
-                            <option value="faculty">Faculty</option>
-                            <option value="staff">Staff</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Priority *</label>
-                        <select id="modal-notice-priority" name="priority" class="form-control" required>
-                            <option value="low">Low</option>
-                            <option value="normal" selected>Normal</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
-                        </select>
-                    </div>
-                    <div class="form-group full-width">
-                        <label>Notice Content *</label>
-                        <textarea id="modal-notice-content" name="content" class="form-control" style="min-height: 120px;" required></textarea>
-                    </div>
-                    <div class="form-group full-width">
-                        <label>Attachment File (PDF / Image)</label>
-                        <input type="file" name="attachment" class="form-control">
-                    </div>
-                </div>
-                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-notice')">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Publish Notice</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: Application Review -->
-    <div id="modal-review" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Review Application: <span id="modal-review-app-no"></span></h3>
-                <button class="close-modal" onclick="closeModal('modal-review')">&times;</button>
-            </div>
-            <form onsubmit="saveApplicationReview(event)">
-                <input type="hidden" id="review-app-id">
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label>Decision Status *</label>
-                    <select id="modal-review-status" class="form-control" required>
-                        <option value="approved">Approve Application</option>
-                        <option value="rejected">Reject Application</option>
-                        <option value="under_review">Mark Under Review</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label>Reviewer Notes / Feedback</label>
-                    <textarea id="modal-review-notes" class="form-control" placeholder="Provide notes regarding candidate qualifications..."></textarea>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-review')">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Submit Decision</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- MODAL: Create Admin User (Super Admin Only) -->
     <div id="modal-admin-user" class="modal-overlay">

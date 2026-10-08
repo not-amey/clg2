@@ -97,12 +97,12 @@ async function loadDashboardStats() {
 
         const { counts, recentLogs, deptBreakdown } = res.data;
 
-        document.getElementById('stat-students').textContent = counts.totalStudents;
-        document.getElementById('stat-faculty').textContent = counts.totalFaculty;
-        document.getElementById('stat-courses').textContent = counts.totalCourses;
-        document.getElementById('stat-notices').textContent = counts.activeNotices;
-        document.getElementById('stat-apps').textContent = counts.pendingApplications;
-        document.getElementById('stat-admins').textContent = counts.activeAdmins;
+        if (document.getElementById('stat-students')) document.getElementById('stat-students').textContent = counts.totalStudents;
+        if (document.getElementById('stat-faculty')) document.getElementById('stat-faculty').textContent = counts.totalFaculty;
+        if (document.getElementById('stat-courses')) document.getElementById('stat-courses').textContent = counts.totalCourses;
+        if (document.getElementById('stat-notices')) document.getElementById('stat-notices').textContent = counts.activeNotices;
+        if (document.getElementById('stat-apps')) document.getElementById('stat-apps').textContent = counts.pendingApplications;
+        if (document.getElementById('stat-admins')) document.getElementById('stat-admins').textContent = counts.activeAdmins;
 
         // Render Recent Activity Stream
         const logsContainer = document.getElementById('recent-activity-list');
