@@ -100,10 +100,11 @@ async function create(req, res) {
             document_path = await uploadToSupabase(req.file.buffer, req.file.originalname, req.file.mimetype, 'student_documents');
         }
 
-        const cleanEmail = email && email.trim() ? email.trim() : null;
+        const hasCustomEmail = email && email.trim();
+        const cleanEmail = hasCustomEmail ? email.trim() : `${roll_number.trim().toLowerCase().replace(/[^a-z0-9]/g, '_')}@student.local`;
 
         let dupFilter = `roll_number.eq.${roll_number}`;
-        if (cleanEmail) {
+        if (hasCustomEmail) {
             dupFilter += `,email.eq.${cleanEmail}`;
         }
 
@@ -123,7 +124,7 @@ async function create(req, res) {
                 roll_number,
                 full_name,
                 email: cleanEmail,
-                phone: phone || null,
+                phone: phone ? phone.trim() : null,
                 department_id: department_id ? parseInt(department_id, 10) : null,
                 semester: parseInt(semester, 10) || 1,
                 enrollment_year: parseInt(enrollment_year, 10) || new Date().getFullYear(),
@@ -165,10 +166,11 @@ async function update(req, res) {
             return error(res, 'Student not found.', 404);
         }
 
-        const cleanEmail = email && email.trim() ? email.trim() : null;
+        const hasCustomEmail = email && email.trim();
+        const cleanEmail = hasCustomEmail ? email.trim() : `${roll_number.trim().toLowerCase().replace(/[^a-z0-9]/g, '_')}@student.local`;
 
         let dupFilter = `roll_number.eq.${roll_number}`;
-        if (cleanEmail) {
+        if (hasCustomEmail) {
             dupFilter += `,email.eq.${cleanEmail}`;
         }
 

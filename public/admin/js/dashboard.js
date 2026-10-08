@@ -140,12 +140,15 @@ async function loadStudents(page = 1) {
         if (!res.success) return;
 
         const tableBody = document.getElementById('student-table-body');
-        tableBody.innerHTML = res.data.map(s => `
+        tableBody.innerHTML = res.data.map(s => {
+            const hasRealEmail = s.email && !s.email.endsWith('@student.local');
+            const contactText = hasRealEmail ? s.email : (s.phone ? 'Phone: ' + s.phone : 'No Contact Info');
+            return `
             <tr>
                 <td><strong>${s.roll_number}</strong></td>
                 <td>
                     <div style="font-weight: 600;">${s.full_name}</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted);">${s.email || (s.phone ? 'Phone: ' + s.phone : 'No Contact Info')}</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">${contactText}</div>
                 </td>
                 <td>${s.department_name || 'Unassigned'}</td>
                 <td><span class="badge badge-${s.status}">${s.status}</span></td>
@@ -159,7 +162,8 @@ async function loadStudents(page = 1) {
                     </div>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
 
         renderPagination('student-pagination', res.meta, loadStudents);
     } catch (err) {
@@ -182,7 +186,8 @@ function openStudentModal(id = null) {
                 const s = res.data;
                 document.getElementById('modal-student-roll').value = s.roll_number || '';
                 document.getElementById('modal-student-name').value = s.full_name || '';
-                document.getElementById('modal-student-email').value = s.email || '';
+                const hasRealEmail = s.email && !s.email.endsWith('@student.local');
+                document.getElementById('modal-student-email').value = hasRealEmail ? s.email : '';
                 document.getElementById('modal-student-phone').value = s.phone || '';
                 document.getElementById('modal-student-dept').value = s.department_id || '';
                 if (document.getElementById('modal-student-sem')) {
