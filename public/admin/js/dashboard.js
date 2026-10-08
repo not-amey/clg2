@@ -77,14 +77,14 @@ async function loadDepartments() {
 }
 
 function populateDepartmentSelects() {
-    const selects = ['filter-student-dept', 'modal-student-dept', 'filter-faculty-dept', 'modal-faculty-dept', 'filter-course-dept', 'modal-course-dept', 'modal-app-dept'];
+    const selects = ['filter-student-dept', 'modal-student-dept', 'filter-faculty-dept', 'modal-faculty-dept'];
     selects.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         const isFilter = id.startsWith('filter');
-        el.innerHTML = isFilter ? '<option value="">All Departments</option>' : '<option value="">Select Department</option>';
+        el.innerHTML = isFilter ? '<option value="">All Streams / Departments</option>' : '<option value="">Select Stream / Department</option>';
         state.departments.forEach(d => {
-            el.innerHTML += `<option value="${d.id}">${d.name} (${d.code})</option>`;
+            el.innerHTML += `<option value="${d.id}">${d.name}</option>`;
         });
     });
 }
