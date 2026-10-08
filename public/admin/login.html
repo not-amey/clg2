@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in - Shriman G. R. Warange Junior College</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 14px;
+            color: #1E293B;
+            background-color: #FFFFFF;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Split Layout */
+        .split-layout {
+            display: flex;
+            width: 100vw;
+            min-height: 100vh;
+        }
+
+        /* Left Panel - Deep Navy */
+        .left-panel {
+            width: 45%;
+            background-color: #1F3A5F;
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem 3rem;
+        }
+
+        .left-content {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .college-logo-left {
+            width: 52px;
+            height: 52px;
+            background-color: #FFFFFF;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: #1F3A5F;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .college-title-left {
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 0.5rem;
+            color: #FFFFFF;
+        }
+
+        .college-sub-left {
+            font-size: 14px;
+            color: #94A3B8;
+            font-weight: 400;
+        }
+
+        /* Right Panel - Form Container */
+        .right-panel {
+            flex: 1;
+            background-color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 3rem 2rem 2rem;
+        }
+
+        .form-wrapper {
+            width: 100%;
+            max-width: 380px;
+            margin: auto;
+        }
+
+        /* Mobile Header Logo */
+        .mobile-header {
+            display: none;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .mobile-logo {
+            width: 44px;
+            height: 44px;
+            background-color: #1F3A5F;
+            color: #FFFFFF;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 0.75rem;
+        }
+
+        .mobile-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1F3A5F;
+        }
+
+        /* Form Styling */
+        .form-header {
+            margin-bottom: 2rem;
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0F172A;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-subtitle {
+            font-size: 14px;
+            color: #64748B;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #334155;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 42px;
+            padding: 0 0.85rem;
+            font-family: inherit;
+            font-size: 14px;
+            color: #0F172A;
+            background-color: #FFFFFF;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .form-input:focus {
+            border-color: #1F3A5F;
+            box-shadow: 0 0 0 2px #1F3A5F;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748B;
+            cursor: pointer;
+            padding: 2px 4px;
+        }
+
+        .password-toggle:hover {
+            color: #1F3A5F;
+        }
+
+        /* Row: Remember Me & Forgot Password */
+        .form-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 14px;
+            color: #475569;
+            cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #1F3A5F;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1F3A5F;
+            text-decoration: none;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Button */
+        .btn-submit {
+            width: 100%;
+            height: 44px;
+            background-color: #1F3A5F;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .btn-submit:hover {
+            background-color: #162A45;
+        }
+
+        /* Inline Error */
+        .error-message {
+            display: none;
+            margin-top: 1rem;
+            font-size: 14px;
+            color: #DC2626;
+            line-height: 1.4;
+        }
+
+        /* Footer */
+        .footer-text {
+            text-align: center;
+            font-size: 13px;
+            color: #94A3B8;
+            margin-top: 2rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .left-panel {
+                display: none;
+            }
+
+            .right-panel {
+                padding: 2.5rem 1.5rem 1.5rem;
+            }
+
+            .mobile-header {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="split-layout">
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <div class="left-content">
+                <div class="college-logo-left">SG</div>
+                <h1 class="college-title-left">Shriman G. R. Warange Junior College</h1>
+                <p class="college-sub-left">Administrative Portal</p>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel">
+            <div class="form-wrapper">
+                <!-- Mobile Branding -->
+                <div class="mobile-header">
+                    <div class="mobile-logo">SG</div>
+                    <div class="mobile-title">Shriman G. R. Warange Junior College</div>
+                </div>
+
+                <div class="form-header">
+                    <h2 class="form-title">Sign in</h2>
+                    <p class="form-subtitle">Use your institutional account to continue</p>
+                </div>
+
+                <form id="login-form" autocomplete="off">
+                    <div class="form-group">
+                        <label for="username" class="form-label">Email or username</label>
+                        <div class="input-container">
+                            <input type="text" id="username" name="username" class="form-input" required autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-container">
+                            <input type="password" id="password" name="password" class="form-input" required autocomplete="current-password">
+                            <button type="button" class="password-toggle" id="toggle-password-btn" onclick="togglePasswordVisibility()">Show</button>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <a href="#" class="forgot-link" onclick="handleForgotPassword(event)">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Sign in</button>
+
+                    <div id="error-message" class="error-message"></div>
+                </form>
+            </div>
+
+            <div class="footer-text">
+                &copy; 2026 Shriman G. R. Warange Junior College. All rights reserved.
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        let lockoutTimer = null;
+
+        function startLockoutCountdown(lockUntil) {
+            if (!lockUntil) return;
+            
+            const nowMs = new Date().getTime();
+            let targetMs = new Date(lockUntil).getTime();
+            
+            // Hard cap to exactly 5 minutes (300,000 ms) max from now
+            if (isNaN(targetMs) || targetMs - nowMs > 300000) {
+                targetMs = nowMs + 300000;
+                lockUntil = new Date(targetMs).toISOString();
+            }
+
+            sessionStorage.setItem('lockout_until', lockUntil);
+
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const submitBtn = document.querySelector('.btn-submit');
+            const errDiv = document.getElementById('error-message');
+
+            usernameInput.disabled = true;
+            passwordInput.disabled = true;
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.6';
+            submitBtn.style.cursor = 'not-allowed';
+
+            if (lockoutTimer) clearInterval(lockoutTimer);
+
+            function updateTimer() {
+                const currentTime = new Date().getTime();
+                let diffSeconds = Math.ceil((targetMs - currentTime) / 1000);
+
+                if (diffSeconds > 300) diffSeconds = 300; // Cap display to 5:00 max
+
+                if (diffSeconds > 0) {
+                    const minutes = Math.floor(diffSeconds / 60);
+                    const seconds = String(diffSeconds % 60).padStart(2, '0');
+                    errDiv.style.display = 'block';
+                    errDiv.textContent = `Too many login attempts. Try again in ${minutes}:${seconds}`;
+                } else {
+                    clearInterval(lockoutTimer);
+                    lockoutTimer = null;
+                    sessionStorage.removeItem('lockout_until');
+
+                    usernameInput.disabled = false;
+                    passwordInput.disabled = false;
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+
+                    errDiv.style.display = 'block';
+                    errDiv.textContent = 'You can try again now.';
+                }
+            }
+
+            updateTimer();
+            lockoutTimer = setInterval(updateTimer, 1000);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedLockUntil = sessionStorage.getItem('lockout_until');
+            if (savedLockUntil) {
+                const diffMs = new Date(savedLockUntil).getTime() - new Date().getTime();
+                if (diffMs > 0 && diffMs <= 300000) {
+                    startLockoutCountdown(savedLockUntil);
+                } else if (diffMs > 300000) {
+                    // Reset old 15-min timestamp down to 5 mins
+                    const cappedLock = new Date(Date.now() + 300000).toISOString();
+                    startLockoutCountdown(cappedLock);
+                } else {
+                    sessionStorage.removeItem('lockout_until');
+                }
+            }
+        });
+
+        function togglePasswordVisibility() {
+            const pwdInput = document.getElementById('password');
+            const toggleBtn = document.getElementById('toggle-password-btn');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                toggleBtn.textContent = 'Hide';
+            } else {
+                pwdInput.type = 'password';
+                toggleBtn.textContent = 'Show';
+            }
+        }
+
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            const errDiv = document.getElementById('error-message');
+            errDiv.style.display = 'block';
+            errDiv.textContent = 'Please contact the system administrator to reset your password.';
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errDiv = document.getElementById('error-message');
+            errDiv.style.display = 'none';
+            errDiv.textContent = '';
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await apiRequest('/api/auth/login', 'POST', { username, password });
+                
+                if (res.success) {
+                    sessionStorage.removeItem('lockout_until');
+                    window.location.href = '/admin/index.html';
+                } else {
+                    if (res.lockUntil) {
+                        startLockoutCountdown(res.lockUntil);
+                    } else {
+                        errDiv.style.display = 'block';
+                        errDiv.textContent = res.message || 'Invalid email or password.';
+                    }
+                }
+            } catch (err) {
+                if (err.lockUntil) {
+                    startLockoutCountdown(err.lockUntil);
+                } else {
+                    errDiv.style.display = 'block';
+                    errDiv.textContent = err.message || 'Invalid email or password.';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

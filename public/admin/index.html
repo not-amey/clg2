@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Admin Panel | Secure Portal</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-icon">
+                    <i class="fas fa-university"></i>
+                </div>
+                <div class="brand-text">
+                    <h2>EduAdmin</h2>
+                    <span>Secure Portal v2.0</span>
+                </div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <button onclick="switchTab('dashboard')" class="active">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button onclick="switchTab('students')">
+                        <i class="fas fa-user-graduate"></i> Students
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button onclick="switchTab('faculty')">
+                        <i class="fas fa-chalkboard-teacher"></i> Faculty & Staff
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button onclick="switchTab('courses')">
+                        <i class="fas fa-book-open"></i> Courses & Depts
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button onclick="switchTab('notices')">
+                        <i class="fas fa-bullhorn"></i> Notices & News
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button onclick="switchTab('applications')">
+                        <i class="fas fa-file-signature"></i> Admissions Apps
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button onclick="switchTab('cms')">
+                        <i class="fas fa-edit"></i> Website Content (CMS)
+                    </button>
+                </li>
+                <li class="nav-item" data-role-required="super_admin">
+                    <button onclick="switchTab('logs')">
+                        <i class="fas fa-shield-alt"></i> Security Logs
+                    </button>
+                </li>
+                <li class="nav-item" data-role-required="super_admin">
+                    <button onclick="switchTab('admins')">
+                        <i class="fas fa-users-cog"></i> Admin Accounts
+                    </button>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-badge">
+                    <div class="avatar" id="user-avatar">A</div>
+                    <div class="user-info">
+                        <h4 id="user-full-name">Admin User</h4>
+                        <span id="user-role" class="role-super_admin">super_admin</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="open2FASetupModal()" style="width: 100%; margin-bottom: 0.5rem; justify-content: center; font-size: 0.8rem;">
+                    <i class="fas fa-key"></i> Setup 2FA
+                </button>
+                <button class="btn btn-danger" onclick="logoutAdmin()" style="width: 100%; justify-content: center; font-size: 0.85rem;">
+                    <i class="fas fa-sign-out-alt"></i> Sign Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-title">
+                    <h1 id="header-title-text">Overview Dashboard</h1>
+                </div>
+                <div class="header-actions">
+                    <a href="/" target="_blank" class="btn btn-secondary btn-sm" title="View Public College Website">
+                        <i class="fas fa-globe"></i> View Public Website
+                    </a>
+                </div>
+            </header>
+
+            <div class="content-body">
+                
+                <!-- VIEW 1: OVERVIEW DASHBOARD -->
+                <section id="view-dashboard" class="view-section">
+                    <div class="stats-grid">
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon students"><i class="fas fa-user-graduate"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-students">0</h3>
+                                <p>Total Enrolled Students</p>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon faculty"><i class="fas fa-chalkboard-teacher"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-faculty">0</h3>
+                                <p>Faculty Members</p>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon courses"><i class="fas fa-book"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-courses">0</h3>
+                                <p>Active Courses</p>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon notices"><i class="fas fa-bullhorn"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-notices">0</h3>
+                                <p>Published Notices</p>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon apps"><i class="fas fa-file-alt"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-apps">0</h3>
+                                <p>Pending Applications</p>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon admins"><i class="fas fa-user-shield"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-admins">0</h3>
+                                <p>Active System Admins</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 2: STUDENTS MANAGEMENT -->
+                <section id="view-students" class="view-section" style="display: none;">
+                    <div class="action-bar">
+                        <div class="filter-group">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="search-student" placeholder="Search by name, roll no, email..." onkeyup="loadStudents(1)">
+                            </div>
+                            <select id="filter-student-dept" class="select-control" onchange="loadStudents(1)">
+                                <option value="">All Departments</option>
+                            </select>
+                            <select id="filter-student-status" class="select-control" onchange="loadStudents(1)">
+                                <option value="">All Statuses</option>
+                                <option value="active">Active</option>
+                                <option value="graduated">Graduated</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="openStudentModal()" data-role-required="super_admin,staff_admin">
+                            <i class="fas fa-plus"></i> Add New Student
+                        </button>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Roll Number</th>
+                                        <th>Student Info</th>
+                                        <th>Department</th>
+                                        <th>Semester</th>
+                                        <th>Status</th>
+                                        <th>Document</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="student-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div id="student-pagination" class="pagination-container"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW 3: FACULTY MANAGEMENT -->
+                <section id="view-faculty" class="view-section" style="display: none;">
+                    <div class="action-bar">
+                        <div class="filter-group">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="search-faculty" placeholder="Search by name, ID, email..." onkeyup="loadFaculty(1)">
+                            </div>
+                            <select id="filter-faculty-dept" class="select-control" onchange="loadFaculty(1)">
+                                <option value="">All Departments</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="openFacultyModal()" data-role-required="super_admin,faculty_admin">
+                            <i class="fas fa-plus"></i> Add Faculty Member
+                        </button>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Faculty Member</th>
+                                        <th>Designation</th>
+                                        <th>Department</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="faculty-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div id="faculty-pagination" class="pagination-container"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW 4: COURSES MANAGEMENT -->
+                <section id="view-courses" class="view-section" style="display: none;">
+                    <div class="action-bar">
+                        <div class="filter-group">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="search-course" placeholder="Search course code or title..." onkeyup="loadCourses(1)">
+                            </div>
+                            <select id="filter-course-dept" class="select-control" onchange="loadCourses(1)">
+                                <option value="">All Departments</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="openCourseModal()" data-role-required="super_admin,faculty_admin">
+                            <i class="fas fa-plus"></i> Add New Course
+                        </button>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Course Code</th>
+                                        <th>Course Title</th>
+                                        <th>Department</th>
+                                        <th>Credits</th>
+                                        <th>Semester</th>
+                                        <th>Faculty Instructor</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="course-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div id="course-pagination" class="pagination-container"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW 5: NOTICES MANAGEMENT -->
+                <section id="view-notices" class="view-section" style="display: none;">
+                    <div class="action-bar">
+                        <div class="filter-group">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="search-notice" placeholder="Search notices..." onkeyup="loadNotices(1)">
+                            </div>
+                            <select id="filter-notice-category" class="select-control" onchange="loadNotices(1)">
+                                <option value="">All Categories</option>
+                                <option value="academic">Academic</option>
+                                <option value="examination">Examination</option>
+                                <option value="event">Event</option>
+                                <option value="admission">Admission</option>
+                                <option value="general">General</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="openNoticeModal()">
+                            <i class="fas fa-bullhorn"></i> Post Announcement
+                        </button>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Notice Title</th>
+                                        <th>Category</th>
+                                        <th>Priority</th>
+                                        <th>Target Audience</th>
+                                        <th>Attachment</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="notice-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div id="notice-pagination" class="pagination-container"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW 6: ADMISSIONS / APPLICATIONS -->
+                <section id="view-applications" class="view-section" style="display: none;">
+                    <div class="action-bar">
+                        <div class="filter-group">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="search-app" placeholder="Search applicant name or app no..." onkeyup="loadApplications(1)">
+                            </div>
+                            <select id="filter-app-status" class="select-control" onchange="loadApplications(1)">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="under_review">Under Review</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>App No.</th>
+                                        <th>Applicant Name</th>
+                                        <th>Applied Department</th>
+                                        <th>Marks %</th>
+                                        <th>Status</th>
+                                        <th>Certificate</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="app-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div id="app-pagination" class="pagination-container"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW 7: SECURITY AUDIT LOGS -->
+                <section id="view-logs" class="view-section" style="display: none;">
+                    <div class="action-bar">
+                        <div class="filter-group">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="search-log" placeholder="Search by admin username, action, IP..." onkeyup="loadLogs(1)">
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="exportLogsCSV()">
+                            <i class="fas fa-download"></i> Export CSV Report
+                        </button>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Log ID</th>
+                                        <th>Admin User</th>
+                                        <th>Action Executed</th>
+                                        <th>Entity Type</th>
+                                        <th>Details</th>
+                                        <th>IP Address</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="log-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div id="log-pagination" class="pagination-container"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW 8: ADMIN USER ACCOUNTS -->
+                <section id="view-admins" class="view-section" style="display: none;">
+                    <div class="action-bar">
+                        <div></div>
+                        <button class="btn btn-primary" onclick="openAdminModal()">
+                            <i class="fas fa-user-plus"></i> Create Admin Account
+                        </button>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Full Name</th>
+                                        <th>Username</th>
+                                        <th>Role Assigned</th>
+                                        <th>Account Status</th>
+                                        <th>2FA Status</th>
+                                        <th>Last Login</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 8: WEBSITE CONTENT MANAGEMENT (CMS) -->
+                <section id="view-cms" class="view-section" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <div>
+                            <h2 style="font-size: 1.25rem; color: #F8FAFC; font-weight: 600;">Website Content & Image Management</h2>
+                            <p style="font-size: 0.85rem; color: #94A3B8;">Edit live website text and replace images without coding</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveCMSSettings()">
+                            <i class="fas fa-save"></i> Save Content Changes
+                        </button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                        
+                        <!-- Section A: Hero Banner Content -->
+                        <div class="glass-card">
+                            <h3 style="font-size: 1rem; color: #F8FAFC; margin-bottom: 1rem; border-bottom: 1px solid #1E293B; padding-bottom: 0.5rem;">
+                                <i class="fas fa-home" style="color: #94A3B8; margin-right: 0.5rem;"></i> Homepage Hero Banner
+                            </h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Hero Motto Line</label>
+                                    <input type="text" id="cms-hero_motto" class="form-control" placeholder="KNOWLEDGE • DISCIPLINE • CHARACTER">
+                                </div>
+                                <div class="form-group">
+                                    <label>College Hero Title</label>
+                                    <input type="text" id="cms-hero_title" class="form-control" placeholder="Shriman G. R. Warange Junior College">
+                                </div>
+                                <div class="form-group full-width">
+                                    <label>Hero Subtitle / Overview Paragraph</label>
+                                    <textarea id="cms-hero_subtitle" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section B: Academic Session & Announcements -->
+                        <div class="glass-card">
+                            <h3 style="font-size: 1rem; color: #F8FAFC; margin-bottom: 1rem; border-bottom: 1px solid #1E293B; padding-bottom: 0.5rem;">
+                                <i class="fas fa-bullhorn" style="color: #94A3B8; margin-right: 0.5rem;"></i> Academic Session & Notice Banner
+                            </h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Academic Session / Year</label>
+                                    <input type="text" id="cms-admission_session" class="form-control" placeholder="2026-27">
+                                </div>
+                                <div class="form-group full-width">
+                                    <label>Top Announcement Notice Bar Text</label>
+                                    <textarea id="cms-notice_banner_text" class="form-control" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section C: Key Counters & Statistics -->
+                        <div class="glass-card">
+                            <h3 style="font-size: 1rem; color: #F8FAFC; margin-bottom: 1rem; border-bottom: 1px solid #1E293B; padding-bottom: 0.5rem;">
+                                <i class="fas fa-chart-line" style="color: #94A3B8; margin-right: 0.5rem;"></i> Statistics & Counters
+                            </h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Educational Service Counter</label>
+                                    <input type="text" id="cms-stat_years" class="form-control" placeholder="25+ Years">
+                                </div>
+                                <div class="form-group">
+                                    <label>HSC Board Pass Rate</label>
+                                    <input type="text" id="cms-stat_pass_rate" class="form-control" placeholder="98.4%">
+                                </div>
+                                <div class="form-group">
+                                    <label>Enrolled Students Count</label>
+                                    <input type="text" id="cms-stat_students" class="form-control" placeholder="1,200+">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section D: Contact Office & Postal Details -->
+                        <div class="glass-card">
+                            <h3 style="font-size: 1rem; color: #F8FAFC; margin-bottom: 1rem; border-bottom: 1px solid #1E293B; padding-bottom: 0.5rem;">
+                                <i class="fas fa-address-card" style="color: #94A3B8; margin-right: 0.5rem;"></i> Contact Office Details
+                            </h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Contact Phone Number</label>
+                                    <input type="text" id="cms-contact_phone" class="form-control" placeholder="+91 02329 222100">
+                                </div>
+                                <div class="form-group">
+                                    <label>Official Email Address</label>
+                                    <input type="email" id="cms-contact_email" class="form-control" placeholder="info@warangecollege.edu.in">
+                                </div>
+                                <div class="form-group">
+                                    <label>Office Shift / Hours</label>
+                                    <input type="text" id="cms-office_hours" class="form-control" placeholder="7:30 AM to 12:00 PM (Morning Shift)">
+                                </div>
+                                <div class="form-group full-width">
+                                    <label>Postal Address</label>
+                                    <input type="text" id="cms-contact_address" class="form-control" placeholder="Shriman G. R. Warange Junior College, Malkapur, Shahuwadi, Maharashtra — 415101">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section E: Website Images & Banners -->
+                        <div class="glass-card">
+                            <h3 style="font-size: 1rem; color: #F8FAFC; margin-bottom: 1rem; border-bottom: 1px solid #1E293B; padding-bottom: 0.5rem;">
+                                <i class="fas fa-images" style="color: #94A3B8; margin-right: 0.5rem;"></i> Website Images & Banners
+                            </h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                                
+                                <!-- Image 0: Hero Banner Background Photo -->
+                                <div style="background: #0F172A; padding: 1rem; border-radius: 6px; border: 1px solid #334155;">
+                                    <h4 style="font-size: 0.88rem; color: #F8FAFC; margin-bottom: 0.5rem;">Homepage Hero Background Photo</h4>
+                                    <img id="preview-img_hero_bg" src="https://raw.githubusercontent.com/not-amey/clgsite/main/prayer.png" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; margin-bottom: 0.75rem; border: 1px solid #334155;">
+                                    <input type="file" id="file-img_hero_bg" class="form-control" accept="image/*" style="font-size: 0.8rem; margin-bottom: 0.5rem;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="uploadCMSImage('img_hero_bg')" style="width: 100%; justify-content: center;">
+                                        <i class="fas fa-upload"></i> Replace Image
+                                    </button>
+                                </div>
+
+                                <!-- Image 1: Morning Prayer Assembly -->
+                                <div style="background: #0F172A; padding: 1rem; border-radius: 6px; border: 1px solid #334155;">
+                                    <h4 style="font-size: 0.88rem; color: #F8FAFC; margin-bottom: 0.5rem;">Campus Morning Prayer Photo</h4>
+                                    <img id="preview-img_assembly" src="https://raw.githubusercontent.com/not-amey/clgsite/main/prayer.png" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; margin-bottom: 0.75rem; border: 1px solid #334155;">
+                                    <input type="file" id="file-img_assembly" class="form-control" accept="image/*" style="font-size: 0.8rem; margin-bottom: 0.5rem;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="uploadCMSImage('img_assembly')" style="width: 100%; justify-content: center;">
+                                        <i class="fas fa-upload"></i> Replace Image
+                                    </button>
+                                </div>
+
+                                <!-- Image 2: Science Laboratory -->
+                                <div style="background: #0F172A; padding: 1rem; border-radius: 6px; border: 1px solid #334155;">
+                                    <h4 style="font-size: 0.88rem; color: #F8FAFC; margin-bottom: 0.5rem;">Science Laboratory Photo</h4>
+                                    <img id="preview-img_lab" src="https://raw.githubusercontent.com/not-amey/clgsite/main/lab.png" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; margin-bottom: 0.75rem; border: 1px solid #334155;">
+                                    <input type="file" id="file-img_lab" class="form-control" accept="image/*" style="font-size: 0.8rem; margin-bottom: 0.5rem;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="uploadCMSImage('img_lab')" style="width: 100%; justify-content: center;">
+                                        <i class="fas fa-upload"></i> Replace Image
+                                    </button>
+                                </div>
+
+                                <!-- Image 3: Principal Desk Message Photo -->
+                                <div style="background: #0F172A; padding: 1rem; border-radius: 6px; border: 1px solid #334155;">
+                                    <h4 style="font-size: 0.88rem; color: #F8FAFC; margin-bottom: 0.5rem;">Principal Message Image</h4>
+                                    <img id="preview-img_principal" src="https://raw.githubusercontent.com/not-amey/clgsite/main/lab.png" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; margin-bottom: 0.75rem; border: 1px solid #334155;">
+                                    <input type="file" id="file-img_principal" class="form-control" accept="image/*" style="font-size: 0.8rem; margin-bottom: 0.5rem;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="uploadCMSImage('img_principal')" style="width: 100%; justify-content: center;">
+                                        <i class="fas fa-upload"></i> Replace Image
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; text-align: right;">
+                        <button class="btn btn-primary" onclick="saveCMSSettings()">
+                            <i class="fas fa-save"></i> Save Content Changes
+                        </button>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Student Form -->
+    <div id="modal-student" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-student-title">Add New Student</h3>
+                <button class="close-modal" onclick="closeModal('modal-student')">&times;</button>
+            </div>
+            <form id="student-form" onsubmit="saveStudent(event)">
+                <input type="hidden" id="student-id" name="id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Roll Number *</label>
+                        <input type="text" id="modal-student-roll" name="roll_number" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="modal-student-name" name="full_name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="modal-student-email" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="modal-student-phone" name="phone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Department *</label>
+                        <select id="modal-student-dept" name="department_id" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Semester (1-10) *</label>
+                        <input type="number" id="modal-student-sem" name="semester" min="1" max="10" value="1" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Enrollment Year *</label>
+                        <input type="number" id="modal-student-year" name="enrollment_year" min="2000" max="2100" value="2024" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status *</label>
+                        <select id="modal-student-status" name="status" class="form-control">
+                            <option value="active">Active</option>
+                            <option value="graduated">Graduated</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Upload Student Document (PDF / Image)</label>
+                        <input type="file" name="document" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-student')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Faculty Form -->
+    <div id="modal-faculty" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-faculty-title">Add Faculty Member</h3>
+                <button class="close-modal" onclick="closeModal('modal-faculty')">&times;</button>
+            </div>
+            <form id="faculty-form" onsubmit="saveFaculty(event)">
+                <input type="hidden" id="faculty-id" name="id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Faculty ID Number *</label>
+                        <input type="text" id="modal-faculty-num" name="faculty_id_num" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="modal-faculty-name" name="full_name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="modal-faculty-email" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" id="modal-faculty-phone" name="phone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select id="modal-faculty-dept" name="department_id" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Designation *</label>
+                        <input type="text" id="modal-faculty-desig" name="designation" class="form-control" placeholder="Professor / Assistant Prof" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Qualification</label>
+                        <input type="text" id="modal-faculty-qual" name="qualification" class="form-control" placeholder="Ph.D. in Computer Science">
+                    </div>
+                    <div class="form-group">
+                        <label>Status *</label>
+                        <select id="modal-faculty-status" name="status" class="form-control">
+                            <option value="active">Active</option>
+                            <option value="on_leave">On Leave</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Faculty Photo (JPG / PNG)</label>
+                        <input type="file" name="photo" class="form-control" accept=".png,.jpg,.jpeg">
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-faculty')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Faculty</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Course Form -->
+    <div id="modal-course" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-course-title">Add New Course</h3>
+                <button class="close-modal" onclick="closeModal('modal-course')">&times;</button>
+            </div>
+            <form id="course-form" onsubmit="saveCourse(event)">
+                <input type="hidden" id="course-id" name="id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Course Code *</label>
+                        <input type="text" id="modal-course-code" class="form-control" placeholder="CS101" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Course Title *</label>
+                        <input type="text" id="modal-course-name" class="form-control" placeholder="Data Structures" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Department *</label>
+                        <select id="modal-course-dept" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Credits (1-10) *</label>
+                        <input type="number" id="modal-course-credits" min="1" max="10" value="4" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Semester (1-10) *</label>
+                        <input type="number" id="modal-course-sem" min="1" max="10" value="1" class="form-control" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Description</label>
+                        <textarea id="modal-course-desc" class="form-control" placeholder="Course syllabus summary..."></textarea>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-course')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Notice Form -->
+    <div id="modal-notice" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Post Announcement / Notice</h3>
+                <button class="close-modal" onclick="closeModal('modal-notice')">&times;</button>
+            </div>
+            <form id="notice-form" onsubmit="saveNotice(event)">
+                <input type="hidden" id="notice-id" name="id">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Notice Title *</label>
+                        <input type="text" id="modal-notice-title" name="title" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select id="modal-notice-cat" name="category" class="form-control" required>
+                            <option value="academic">Academic</option>
+                            <option value="examination">Examination</option>
+                            <option value="event">Event</option>
+                            <option value="admission">Admission</option>
+                            <option value="general">General</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Audience *</label>
+                        <select id="modal-notice-target" name="target_audience" class="form-control" required>
+                            <option value="all">All</option>
+                            <option value="students">Students</option>
+                            <option value="faculty">Faculty</option>
+                            <option value="staff">Staff</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority *</label>
+                        <select id="modal-notice-priority" name="priority" class="form-control" required>
+                            <option value="low">Low</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Notice Content *</label>
+                        <textarea id="modal-notice-content" name="content" class="form-control" style="min-height: 120px;" required></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Attachment File (PDF / Image)</label>
+                        <input type="file" name="attachment" class="form-control">
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-notice')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Publish Notice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Application Review -->
+    <div id="modal-review" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Review Application: <span id="modal-review-app-no"></span></h3>
+                <button class="close-modal" onclick="closeModal('modal-review')">&times;</button>
+            </div>
+            <form onsubmit="saveApplicationReview(event)">
+                <input type="hidden" id="review-app-id">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Decision Status *</label>
+                    <select id="modal-review-status" class="form-control" required>
+                        <option value="approved">Approve Application</option>
+                        <option value="rejected">Reject Application</option>
+                        <option value="under_review">Mark Under Review</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Reviewer Notes / Feedback</label>
+                    <textarea id="modal-review-notes" class="form-control" placeholder="Provide notes regarding candidate qualifications..."></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-review')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Submit Decision</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Create Admin User (Super Admin Only) -->
+    <div id="modal-admin-user" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Admin Account</h3>
+                <button class="close-modal" onclick="closeModal('modal-admin-user')">&times;</button>
+            </div>
+            <form id="admin-user-form" onsubmit="saveAdminUser(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Username *</label>
+                        <input type="text" id="modal-admin-uname" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="modal-admin-fname" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="modal-admin-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password *</label>
+                        <input type="password" id="modal-admin-pass" class="form-control" minlength="8" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Role Assignment *</label>
+                        <select id="modal-admin-role" class="form-control" required>
+                            <option value="staff_admin">Staff Admin (Admissions & Students)</option>
+                            <option value="faculty_admin">Faculty Admin (Courses & Faculty)</option>
+                            <option value="super_admin">Super Admin (Full System Control)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-admin-user')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> Create Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: 2FA Setup -->
+    <div id="modal-2fa-setup" class="modal-overlay">
+        <div class="modal-content" style="text-align: center;">
+            <div class="modal-header">
+                <h3>Setup Two-Factor Authentication</h3>
+                <button class="close-modal" onclick="closeModal('modal-2fa-setup')">&times;</button>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+                Scan the QR code below with your authenticator app (Google Authenticator, Authy, etc.):
+            </p>
+            <div style="background: #fff; padding: 1rem; display: inline-block; border-radius: 12px; margin-bottom: 1rem;">
+                <img id="qr-code-img" src="" alt="2FA QR Code" style="width: 180px; height: 180px;">
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Secret Key: <code id="2fa-secret-text" style="color: var(--secondary); font-weight: 700;"></code>
+            </div>
+            <div class="form-group" style="max-width: 250px; margin: 0 auto 1.25rem;">
+                <input type="text" id="2fa-code-input" class="form-control" placeholder="Enter 6-digit TOTP code" style="text-align: center; font-size: 1.1rem; letter-spacing: 2px;" maxlength="6">
+            </div>
+            <button class="btn btn-primary" onclick="confirm2FAEnable()" style="width: 100%; justify-content: center;">
+                <i class="fas fa-shield-alt"></i> Verify & Enable 2FA
+            </button>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
