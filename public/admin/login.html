@@ -21,12 +21,15 @@
             background-color: #FFFFFF;
             min-height: 100vh;
             display: flex;
+            overflow-x: hidden;
+            width: 100%;
         }
 
         /* Split Layout */
         .split-layout {
             display: flex;
-            width: 100vw;
+            width: 100%;
+            max-width: 100%;
             min-height: 100vh;
         }
 
@@ -169,9 +172,10 @@
             box-shadow: 0 0 0 2px #1F3A5F;
         }
 
+        /* Password toggle button */
         .password-toggle {
             position: absolute;
-            right: 0.85rem;
+            right: 0.5rem;
             top: 50%;
             transform: translateY(-50%);
             background: none;
@@ -180,7 +184,12 @@
             font-weight: 500;
             color: #64748B;
             cursor: pointer;
-            padding: 2px 4px;
+            padding: 8px;
+            min-width: 44px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .password-toggle:hover {
@@ -193,6 +202,8 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .checkbox-label {
@@ -202,11 +213,12 @@
             font-size: 14px;
             color: #475569;
             cursor: pointer;
+            min-height: 44px;
         }
 
         .checkbox-label input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             accent-color: #1F3A5F;
             border-radius: 4px;
             cursor: pointer;
@@ -217,6 +229,9 @@
             font-weight: 500;
             color: #1F3A5F;
             text-decoration: none;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
         }
 
         .forgot-link:hover {
@@ -271,6 +286,20 @@
 
             .mobile-header {
                 display: block;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .right-panel {
+                padding: 1.5rem 1rem 1rem;
+            }
+
+            .form-title {
+                font-size: 20px;
+            }
+
+            .mobile-title {
+                font-size: 16px;
             }
         }
     </style>

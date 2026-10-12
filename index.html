@@ -46,16 +46,43 @@
     <!-- Main Navigation Bar -->
     <nav class="main-navbar">
         <div class="nav-container">
-            <ul class="nav-links-formal">
-                <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="about.html">About College</a></li>
-                <li><a href="principal.html">Principal's Desk</a></li>
-                <li><a href="courses.html">Academic Streams</a></li>
-                <li><a href="facilities.html">Infrastructure</a></li>
-                <li><a href="notices.html">Notice Board</a></li>
-                <li><a href="contact.html">Contact Office</a></li>
-            </ul>
-            <a href="admissions.html" class="btn-admission">Class XI Admission</a>
+            <div class="mobile-header-bar">
+                <a href="index.html" class="mobile-brand-link">
+                    <div class="mobile-seal">SG</div>
+                    <span class="mobile-brand-name">Warange Jr College</span>
+                </a>
+                <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Open Navigation Menu" aria-expanded="false">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+
+            <div class="nav-menu-drawer" id="nav-menu-drawer">
+                <div class="drawer-header">
+                    <div class="drawer-brand">
+                        <div class="mobile-seal">SG</div>
+                        <div>
+                            <div class="drawer-college-name">S. G. R. Warange Jr College</div>
+                            <div class="drawer-college-sub">Malkapur, Shahuwadi</div>
+                        </div>
+                    </div>
+                    <button class="drawer-close-btn" id="drawer-close-btn" aria-label="Close Navigation Menu">&times;</button>
+                </div>
+                <ul class="nav-links-formal">
+                    <li><a href="index.html" class="active">Home</a></li>
+                    <li><a href="about.html">About College</a></li>
+                    <li><a href="principal.html">Principal's Desk</a></li>
+                    <li><a href="courses.html">Academic Streams</a></li>
+                    <li><a href="facilities.html">Infrastructure</a></li>
+                    <li><a href="notices.html">Notice Board</a></li>
+                    <li><a href="contact.html">Contact Office</a></li>
+                </ul>
+                <div class="drawer-cta">
+                    <a href="admissions.html" class="btn-admission">Class XI Admission</a>
+                </div>
+            </div>
+            <div class="mobile-nav-backdrop" id="mobile-nav-backdrop"></div>
         </div>
     </nav>
 

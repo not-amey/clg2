@@ -20,6 +20,7 @@
                     <h2>EduAdmin</h2>
                     <span>Secure Portal v2.0</span>
                 </div>
+                <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close Sidebar">&times;</button>
             </div>
 
             <ul class="nav-menu">
@@ -69,16 +70,34 @@
             </div>
         </aside>
 
+        <!-- Sidebar Drawer Backdrop for Mobile/Tablet -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
         <!-- Main Content Area -->
         <main class="main-content">
             <header class="top-header">
-                <div class="header-title">
-                    <h1 id="header-title-text">Overview Dashboard</h1>
+                <div class="header-left">
+                    <button class="admin-menu-toggle" id="admin-menu-toggle" aria-label="Toggle Navigation Drawer">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="header-title">
+                        <h1 id="header-title-text">Overview Dashboard</h1>
+                    </div>
                 </div>
                 <div class="header-actions">
-                    <a href="/" target="_blank" class="btn btn-secondary btn-sm" title="View Public College Website">
+                    <a href="/" target="_blank" class="btn btn-secondary btn-sm desktop-only-action" title="View Public College Website">
                         <i class="fas fa-globe"></i> View Public Website
                     </a>
+                    <div class="header-overflow-dropdown" id="header-overflow-dropdown">
+                        <button class="btn-icon header-overflow-btn" id="header-overflow-btn" aria-label="More Options">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="overflow-menu" id="header-overflow-menu">
+                            <a href="/" target="_blank" class="overflow-item">
+                                <i class="fas fa-globe"></i> View Public Website
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </header>
 

@@ -123,9 +123,63 @@ window.closeCreditsModalOnBackdrop = function (event) {
         }
     }
 
+    function initMobileNavigation() {
+        const toggleBtn = document.getElementById('mobile-nav-toggle');
+        const drawer = document.getElementById('nav-menu-drawer');
+        const backdrop = document.getElementById('mobile-nav-backdrop');
+        const closeBtn = document.getElementById('drawer-close-btn');
+
+        if (!toggleBtn || !drawer) return;
+
+        function openDrawer() {
+            drawer.classList.add('open');
+            if (backdrop) backdrop.classList.add('active');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDrawer() {
+            drawer.classList.remove('open');
+            if (backdrop) backdrop.classList.remove('active');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+        }
+
+        toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (drawer.classList.contains('open')) {
+                closeDrawer();
+            } else {
+                openDrawer();
+            }
+        });
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                closeDrawer();
+            });
+        }
+
+        if (backdrop) {
+            backdrop.addEventListener('click', closeDrawer);
+        }
+
+        drawer.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeDrawer);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && drawer.classList.contains('open')) {
+                closeDrawer();
+            }
+        });
+    }
+
     function initAll() {
         initAdminLockButton();
         initCreditsModal();
+        initMobileNavigation();
         loadCMSSettings();
     }
 

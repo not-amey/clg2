@@ -15,12 +15,99 @@ let state = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+    initAdminResponsiveUI();
     const user = await checkSession();
     if (!user) return;
 
     await loadDepartments();
     switchTab('dashboard');
 });
+
+function initAdminResponsiveUI() {
+    const menuToggle = document.getElementById('admin-menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const closeBtn = document.getElementById('sidebar-close-btn');
+    const overflowBtn = document.getElementById('header-overflow-btn');
+    const overflowMenu = document.getElementById('header-overflow-menu');
+
+    function openSidebar() {
+        if (sidebar) sidebar.classList.add('open');
+        if (backdrop) backdrop.classList.add('active');
+        if (menuToggle) menuToggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+        if (sidebar) sidebar.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('active');
+        if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+
+    if (menuToggle) {
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (sidebar && sidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeSidebar();
+        });
+    }
+
+    if (backdrop) {
+        backdrop.addEventListener('click', closeSidebar);
+    }
+
+    // Tapping any menu item button in sidebar closes drawer on small screens
+    document.querySelectorAll('.sidebar .nav-item button, .sidebar-footer button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        });
+    });
+
+    // Overflow Menu handling
+    if (overflowBtn && overflowMenu) {
+        overflowBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            overflowMenu.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!overflowMenu.contains(e.target) && e.target !== overflowBtn) {
+                overflowMenu.classList.remove('open');
+            }
+        });
+    }
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            closeSidebar();
+            if (overflowMenu) overflowMenu.classList.remove('open');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (sidebar && sidebar.classList.contains('open')) {
+                closeSidebar();
+            }
+            if (overflowMenu && overflowMenu.classList.contains('open')) {
+                overflowMenu.classList.remove('open');
+            }
+        }
+    });
+}
 
 function switchTab(tabId) {
     state.currentTab = tabId;
@@ -32,6 +119,15 @@ function switchTab(tabId) {
             btn.classList.add('active');
         }
     });
+
+    // Close mobile drawer on tab switch
+    if (window.innerWidth <= 768) {
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop');
+        if (sidebar) sidebar.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('active');
+        document.body.style.overflow = '';
+    }
 
     // Update Top Header Title
     const titleMap = {
@@ -113,9 +209,9 @@ async function loadDashboardStats() {
                         <i class="fas fa-history"></i>
                     </div>
                     <div style="flex: 1;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; flex-wrap: wrap; gap: 4px;">
                             <strong>${log.admin_username}</strong>
-                            <span style="color: var(--text-dim);">${new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span style="color: var(--text-dim); font-size: 0.8rem;">${new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                         <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">${log.action} - ${log.details}</p>
                     </div>
