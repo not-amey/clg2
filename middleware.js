@@ -69,7 +69,7 @@ export default async function middleware(request) {
 
     const cookieHeader = request.headers.get('cookie') || '';
     const sessionCookie = getCookieValue(cookieHeader, 'admin_session');
-    const secret = process.env.ADMIN_SESSION_SECRET;
+    const secret = process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || process.env.JWT_SECRET || 'college_admin_session_secret_default_key_99411';
 
     const isValid = await verifySessionCookie(sessionCookie, secret);
 

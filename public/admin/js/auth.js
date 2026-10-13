@@ -21,28 +21,12 @@ function initInactivityTracker() {
     resetInactivityTimer();
 }
 
-// Force logout on every page refresh, tab close, or window exit
-window.addEventListener('beforeunload', () => {
-    if (navigator.sendBeacon) {
-        navigator.sendBeacon('/api/auth/logout');
-    }
-});
-
 async function checkSession() {
     if (window.__preAuthUser) {
         currentAdminUser = window.__preAuthUser;
         updateUserUI(currentAdminUser);
         initInactivityTracker();
         return currentAdminUser;
-    }
-
-    // Detect page refresh (F5 / reload)
-    const navEntries = performance.getEntriesByType('navigation');
-    const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
-
-    if (isReload) {
-        await logoutAdmin();
-        return null;
     }
 
     try {

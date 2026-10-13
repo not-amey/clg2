@@ -46,6 +46,33 @@ app.use('/api', apiLimiter);
 // CSRF Cookie Middleware
 app.use(csrfProtection);
 
+// Helper to verify admin session
+function verifyAdminSession(req) {
+    const crypto = require('crypto');
+    const cookie = req.cookies && req.cookies.admin_session;
+    const secret = process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || process.env.JWT_SECRET || 'college_admin_session_secret_default_key_99411';
+    if (!cookie || !secret) return false;
+
+    const parts = cookie.split('.');
+    if (parts.length !== 2) return false;
+
+    const [expiresMsStr, hmacHex] = parts;
+    const expiresMs = Number(expiresMsStr);
+    if (!expiresMs || isNaN(expiresMs) || expiresMs < Date.now()) return false;
+
+    const expected = crypto.createHmac('sha256', secret).update(expiresMsStr).digest('hex');
+    if (expected.length !== hmacHex.length) return false;
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(hmacHex));
+}
+
+// Admin Route Guard (Checked before static file serving)
+app.get(['/admin', '/admin/', '/admin/panel.html', '/admin/index.html'], (req, res) => {
+    if (verifyAdminSession(req)) {
+        return res.sendFile(path.join(__dirname, 'public/admin/panel.html'));
+    }
+    return res.sendFile(path.join(__dirname, 'public/admin/login.html'));
+});
+
 // Serve Public Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/admin', express.static(path.join(__dirname, 'public/admin')));
@@ -70,36 +97,12 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'UP', timestamp: new Date().toISOString() });
 });
 
-// Admin Route Guard & SPA Fallback
-app.get(['/admin', '/admin/', '/admin/panel.html', '/admin/index.html'], (req, res) => {
-    const crypto = require('crypto');
-    const cookie = req.cookies && req.cookies.admin_session;
-    const secret = process.env.ADMIN_SESSION_SECRET;
-    let isValid = false;
-
-    if (cookie && secret) {
-        const parts = cookie.split('.');
-        if (parts.length === 2) {
-            const [expiresMsStr, hmacHex] = parts;
-            const expiresMs = Number(expiresMsStr);
-            if (expiresMs && !isNaN(expiresMs) && expiresMs >= Date.now()) {
-                const expected = crypto.createHmac('sha256', secret).update(expiresMsStr).digest('hex');
-                if (expected.length === hmacHex.length && crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(hmacHex))) {
-                    isValid = true;
-                }
-            }
-        }
-    }
-
-    if (isValid) {
+// Fallback for Admin SPA routes
+app.get(/^\/admin\/.*/, (req, res) => {
+    if (verifyAdminSession(req)) {
         return res.sendFile(path.join(__dirname, 'public/admin/panel.html'));
     }
     return res.sendFile(path.join(__dirname, 'public/admin/login.html'));
-});
-
-// Fallback for Admin SPA routes
-app.get(/^\/admin\/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/admin/panel.html'));
 });
 
 // Global 404 Handler for API
