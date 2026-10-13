@@ -19,6 +19,8 @@ const applicationRoutes = require('./routes/applicationRoutes');
 const logRoutes = require('./routes/logRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const adminLoginHandler = require('./api/admin-login');
+const adminLogoutHandler = require('./api/admin-logout');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -60,15 +62,44 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/admins', adminRoutes);
 app.use('/api/settings', settingsRoutes);
+app.post('/api/admin-login', (req, res) => adminLoginHandler(req, res));
+app.post('/api/admin-logout', (req, res) => adminLogoutHandler(req, res));
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'UP', timestamp: new Date().toISOString() });
 });
 
-// Fallback for Admin SPA
+// Admin Route Guard & SPA Fallback
+app.get(['/admin', '/admin/', '/admin/panel.html', '/admin/index.html'], (req, res) => {
+    const crypto = require('crypto');
+    const cookie = req.cookies && req.cookies.admin_session;
+    const secret = process.env.ADMIN_SESSION_SECRET;
+    let isValid = false;
+
+    if (cookie && secret) {
+        const parts = cookie.split('.');
+        if (parts.length === 2) {
+            const [expiresMsStr, hmacHex] = parts;
+            const expiresMs = Number(expiresMsStr);
+            if (expiresMs && !isNaN(expiresMs) && expiresMs >= Date.now()) {
+                const expected = crypto.createHmac('sha256', secret).update(expiresMsStr).digest('hex');
+                if (expected.length === hmacHex.length && crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(hmacHex))) {
+                    isValid = true;
+                }
+            }
+        }
+    }
+
+    if (isValid) {
+        return res.sendFile(path.join(__dirname, 'public/admin/panel.html'));
+    }
+    return res.sendFile(path.join(__dirname, 'public/admin/login.html'));
+});
+
+// Fallback for Admin SPA routes
 app.get(/^\/admin\/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/admin/index.html'));
+    res.sendFile(path.join(__dirname, 'public/admin/panel.html'));
 });
 
 // Global 404 Handler for API

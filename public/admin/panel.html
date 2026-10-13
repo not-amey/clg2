@@ -6,44 +6,6 @@
     <title>College Admin Panel | Secure Portal</title>
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style id="auth-guard-style">
-        body { display: none !important; }
-    </style>
-    <script>
-        (async function () {
-            const nav = performance.getEntriesByType('navigation');
-            if (nav.length > 0 && nav[0].type === 'reload') {
-                if (navigator.sendBeacon) navigator.sendBeacon('/api/auth/logout');
-                window.location.replace('/admin/login.html');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
-                if (!res.ok) {
-                    window.location.replace('/admin/login.html');
-                    return;
-                }
-                const data = await res.json();
-                if (!data || !data.success || !data.data || !data.data.user) {
-                    window.location.replace('/admin/login.html');
-                    return;
-                }
-                window.__preAuthUser = data.data.user;
-                function revealBody() {
-                    const style = document.getElementById('auth-guard-style');
-                    if (style) style.remove();
-                }
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', revealBody);
-                } else {
-                    revealBody();
-                }
-            } catch (err) {
-                window.location.replace('/admin/login.html');
-            }
-        })();
-    </script>
 </head>
 <body>
 

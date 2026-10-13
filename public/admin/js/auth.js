@@ -47,49 +47,51 @@ async function checkSession() {
 
     try {
         const res = await apiRequest('/api/auth/me');
-        if (res.success && res.data.user) {
+        if (res && res.success && res.data && res.data.user) {
             currentAdminUser = res.data.user;
             updateUserUI(currentAdminUser);
             initInactivityTracker();
             return currentAdminUser;
         }
     } catch (err) {
-        if (!window.location.pathname.includes('login.html')) {
-            window.location.replace('/admin/login.html');
-        }
+        // Handled server-side by routing middleware
     }
     return null;
 }
 
 function updateUserUI(user) {
+    if (!user) return;
     const nameEl = document.getElementById('user-full-name');
     const roleEl = document.getElementById('user-role');
     const avatarEl = document.getElementById('user-avatar');
 
-    if (nameEl) nameEl.textContent = user.full_name;
-    if (roleEl) {
+    if (nameEl && user.full_name) nameEl.textContent = user.full_name;
+    if (roleEl && user.role) {
         roleEl.textContent = user.role.replace('_', ' ');
         roleEl.className = `role-${user.role}`;
     }
-    if (avatarEl) avatarEl.textContent = user.full_name.charAt(0).toUpperCase();
+    if (avatarEl && user.full_name) avatarEl.textContent = user.full_name.charAt(0).toUpperCase();
 
     // Hide role-restricted elements if needed
-    document.querySelectorAll('[data-role-required]').forEach(el => {
-        const allowed = el.getAttribute('data-role-required').split(',');
-        if (!allowed.includes(user.role)) {
-            el.style.display = 'none';
-        } else {
-            el.style.display = '';
-        }
-    });
+    if (user.role) {
+        document.querySelectorAll('[data-role-required]').forEach(el => {
+            const allowed = el.getAttribute('data-role-required').split(',');
+            if (!allowed.includes(user.role)) {
+                el.style.display = 'none';
+            } else {
+                el.style.display = '';
+            }
+        });
+    }
 }
 
 async function logoutAdmin() {
     try {
+        await fetch('/api/admin-logout', { method: 'POST' });
         await apiRequest('/api/auth/logout', 'POST');
     } catch (e) {
         // ignore
     } finally {
-        window.location.replace('/admin/login.html');
+        window.location.href = '/admin';
     }
 }

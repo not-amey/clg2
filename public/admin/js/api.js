@@ -37,12 +37,6 @@ async function apiRequest(endpoint, method = 'GET', body = null, isFormData = fa
         const response = await fetch(endpoint, options);
         const data = await response.json();
 
-        if (response.status === 401) {
-            // Unauthorized - clear user session and redirect to login if not already on login page
-            if (!window.location.pathname.includes('login.html')) {
-                window.location.replace('/admin/login.html');
-            }
-        }
 
         if (!response.ok) {
             const errObj = new Error(data.message || 'An error occurred during API request.');
