@@ -40,7 +40,7 @@ async function apiRequest(endpoint, method = 'GET', body = null, isFormData = fa
         if (response.status === 401) {
             // Unauthorized - clear user session and redirect to login if not already on login page
             if (!window.location.pathname.includes('login.html')) {
-                window.location.href = '/admin/login.html';
+                window.location.replace('/admin/login.html');
             }
         }
 

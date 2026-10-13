@@ -29,6 +29,13 @@ window.addEventListener('beforeunload', () => {
 });
 
 async function checkSession() {
+    if (window.__preAuthUser) {
+        currentAdminUser = window.__preAuthUser;
+        updateUserUI(currentAdminUser);
+        initInactivityTracker();
+        return currentAdminUser;
+    }
+
     // Detect page refresh (F5 / reload)
     const navEntries = performance.getEntriesByType('navigation');
     const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
@@ -48,7 +55,7 @@ async function checkSession() {
         }
     } catch (err) {
         if (!window.location.pathname.includes('login.html')) {
-            window.location.href = '/admin/login.html';
+            window.location.replace('/admin/login.html');
         }
     }
     return null;
@@ -83,6 +90,6 @@ async function logoutAdmin() {
     } catch (e) {
         // ignore
     } finally {
-        window.location.href = '/admin/login.html';
+        window.location.replace('/admin/login.html');
     }
 }
