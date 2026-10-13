@@ -1388,42 +1388,8 @@ a {
         font-size: 13.5px;
     }
 
-    .admin-lock-btn {
-        bottom: 14px;
-        left: 14px;
-        width: 44px;
-        height: 44px;
-    }
 }
 
-/* Fixed Bottom-Left Admin Lock Button */
-.admin-lock-btn {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 9999;
-    width: 44px;
-    height: 44px;
-    background: #0f172a;
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    text-decoration: none !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, box-shadow 0.2s ease;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.admin-lock-btn:hover {
-    transform: scale(1.12);
-    background: #1e293b;
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
-}
 
 /* Creator Credit Link */
 .creator-credit {

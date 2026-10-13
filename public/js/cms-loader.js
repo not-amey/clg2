@@ -1,6 +1,6 @@
 /**
  * CMS Dynamic Content & Image Loader for College Website
- * Includes Global Admin Lock Button & Developer Credits Modal
+ * Includes Developer Credits Modal
  */
 
 // Global Modal Handlers
@@ -30,19 +30,6 @@ window.closeCreditsModalOnBackdrop = function (event) {
 };
 
 (function () {
-    // Inject Bottom-Left Admin Lock Button if not present
-    function initAdminLockButton() {
-        if (!document.querySelector('.admin-lock-btn')) {
-            const lockBtn = document.createElement('a');
-            lockBtn.href = '/admin/login.html';
-            lockBtn.className = 'admin-lock-btn';
-            lockBtn.title = 'Admin Portal';
-            lockBtn.setAttribute('aria-label', 'Admin Portal');
-            lockBtn.innerHTML = '🔒';
-            document.body.appendChild(lockBtn);
-        }
-    }
-
     // Inject Credits Modal if not present
     function initCreditsModal() {
         if (!document.getElementById('credits-modal')) {
@@ -177,7 +164,6 @@ window.closeCreditsModalOnBackdrop = function (event) {
     }
 
     function initAll() {
-        initAdminLockButton();
         initCreditsModal();
         initMobileNavigation();
         loadCMSSettings();
