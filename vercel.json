@@ -9,8 +9,7 @@
           "*.html",
           "style.css",
           "images/**",
-          "public/**",
-          "api/**"
+          "public/**"
         ]
       }
     }

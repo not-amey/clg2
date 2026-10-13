@@ -19,8 +19,6 @@ const applicationRoutes = require('./routes/applicationRoutes');
 const logRoutes = require('./routes/logRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
-const adminLoginHandler = require('./api/admin-login');
-const adminLogoutHandler = require('./api/admin-logout');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,33 +44,6 @@ app.use('/api', apiLimiter);
 // CSRF Cookie Middleware
 app.use(csrfProtection);
 
-// Helper to verify admin session
-function verifyAdminSession(req) {
-    const crypto = require('crypto');
-    const cookie = req.cookies && req.cookies.admin_session;
-    const secret = process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || process.env.JWT_SECRET || 'college_admin_session_secret_default_key_99411';
-    if (!cookie || !secret) return false;
-
-    const parts = cookie.split('.');
-    if (parts.length !== 2) return false;
-
-    const [expiresMsStr, hmacHex] = parts;
-    const expiresMs = Number(expiresMsStr);
-    if (!expiresMs || isNaN(expiresMs) || expiresMs < Date.now()) return false;
-
-    const expected = crypto.createHmac('sha256', secret).update(expiresMsStr).digest('hex');
-    if (expected.length !== hmacHex.length) return false;
-    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(hmacHex));
-}
-
-// Admin Route Guard (Checked before static file serving)
-app.get(['/admin', '/admin/', '/admin/panel.html', '/admin/index.html'], (req, res) => {
-    if (verifyAdminSession(req)) {
-        return res.sendFile(path.join(__dirname, 'public/admin/panel.html'));
-    }
-    return res.sendFile(path.join(__dirname, 'public/admin/login.html'));
-});
-
 // Serve Public Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/admin', express.static(path.join(__dirname, 'public/admin')));
@@ -89,20 +60,15 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/admins', adminRoutes);
 app.use('/api/settings', settingsRoutes);
-app.post('/api/admin-login', (req, res) => adminLoginHandler(req, res));
-app.post('/api/admin-logout', (req, res) => adminLogoutHandler(req, res));
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'UP', timestamp: new Date().toISOString() });
 });
 
-// Fallback for Admin SPA routes
+// Fallback for Admin SPA
 app.get(/^\/admin\/.*/, (req, res) => {
-    if (verifyAdminSession(req)) {
-        return res.sendFile(path.join(__dirname, 'public/admin/panel.html'));
-    }
-    return res.sendFile(path.join(__dirname, 'public/admin/login.html'));
+    res.sendFile(path.join(__dirname, 'public/admin/index.html'));
 });
 
 // Global 404 Handler for API

@@ -334,16 +334,20 @@
                     <div class="form-group">
                         <label for="username" class="form-label">Email or username</label>
                         <div class="input-container">
-                            <input type="text" id="username" name="username" class="form-input" required autocomplete="username" placeholder="Enter username or email">
+                            <input type="text" id="username" name="username" class="form-input" required autocomplete="off">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="password" class="form-label">Password</label>
                         <div class="input-container">
-                            <input type="password" id="password" name="password" class="form-input" required autocomplete="current-password" placeholder="Enter password">
+                            <input type="password" id="password" name="password" class="form-input" required autocomplete="current-password">
                             <button type="button" class="password-toggle" id="toggle-password-btn" onclick="togglePasswordVisibility()">Show</button>
                         </div>
+                    </div>
+
+                    <div class="form-row">
+                        <a href="#" class="forgot-link" onclick="handleForgotPassword(event)">Forgot password?</a>
                     </div>
 
                     <button type="submit" class="btn-submit">Sign in</button>
@@ -360,6 +364,82 @@
 
     <script src="js/api.js"></script>
     <script>
+        let lockoutTimer = null;
+
+        function startLockoutCountdown(lockUntil) {
+            if (!lockUntil) return;
+            
+            const nowMs = new Date().getTime();
+            let targetMs = new Date(lockUntil).getTime();
+            
+            // Hard cap to exactly 5 minutes (300,000 ms) max from now
+            if (isNaN(targetMs) || targetMs - nowMs > 300000) {
+                targetMs = nowMs + 300000;
+                lockUntil = new Date(targetMs).toISOString();
+            }
+
+            sessionStorage.setItem('lockout_until', lockUntil);
+
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const submitBtn = document.querySelector('.btn-submit');
+            const errDiv = document.getElementById('error-message');
+
+            usernameInput.disabled = true;
+            passwordInput.disabled = true;
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.6';
+            submitBtn.style.cursor = 'not-allowed';
+
+            if (lockoutTimer) clearInterval(lockoutTimer);
+
+            function updateTimer() {
+                const currentTime = new Date().getTime();
+                let diffSeconds = Math.ceil((targetMs - currentTime) / 1000);
+
+                if (diffSeconds > 300) diffSeconds = 300; // Cap display to 5:00 max
+
+                if (diffSeconds > 0) {
+                    const minutes = Math.floor(diffSeconds / 60);
+                    const seconds = String(diffSeconds % 60).padStart(2, '0');
+                    errDiv.style.display = 'block';
+                    errDiv.textContent = `Too many login attempts. Try again in ${minutes}:${seconds}`;
+                } else {
+                    clearInterval(lockoutTimer);
+                    lockoutTimer = null;
+                    sessionStorage.removeItem('lockout_until');
+
+                    usernameInput.disabled = false;
+                    passwordInput.disabled = false;
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+
+                    errDiv.style.display = 'block';
+                    errDiv.textContent = 'You can try again now.';
+                }
+            }
+
+            updateTimer();
+            lockoutTimer = setInterval(updateTimer, 1000);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedLockUntil = sessionStorage.getItem('lockout_until');
+            if (savedLockUntil) {
+                const diffMs = new Date(savedLockUntil).getTime() - new Date().getTime();
+                if (diffMs > 0 && diffMs <= 300000) {
+                    startLockoutCountdown(savedLockUntil);
+                } else if (diffMs > 300000) {
+                    // Reset old 15-min timestamp down to 5 mins
+                    const cappedLock = new Date(Date.now() + 300000).toISOString();
+                    startLockoutCountdown(cappedLock);
+                } else {
+                    sessionStorage.removeItem('lockout_until');
+                }
+            }
+        });
+
         function togglePasswordVisibility() {
             const pwdInput = document.getElementById('password');
             const toggleBtn = document.getElementById('toggle-password-btn');
@@ -372,6 +452,13 @@
             }
         }
 
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            const errDiv = document.getElementById('error-message');
+            errDiv.style.display = 'block';
+            errDiv.textContent = 'Please contact the system administrator to reset your password.';
+        }
+
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const errDiv = document.getElementById('error-message');
@@ -382,23 +469,26 @@
             const password = document.getElementById('password').value;
 
             try {
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await res.json().catch(() => ({}));
-
-                if (res.ok && data.success) {
-                    window.location.href = '/admin';
+                const res = await apiRequest('/api/auth/login', 'POST', { username, password });
+                
+                if (res.success) {
+                    sessionStorage.removeItem('lockout_until');
+                    window.location.href = '/admin/index.html';
                 } else {
-                    errDiv.style.display = 'block';
-                    errDiv.textContent = data.message || 'Invalid email or password.';
+                    if (res.lockUntil) {
+                        startLockoutCountdown(res.lockUntil);
+                    } else {
+                        errDiv.style.display = 'block';
+                        errDiv.textContent = res.message || 'Invalid email or password.';
+                    }
                 }
             } catch (err) {
-                errDiv.style.display = 'block';
-                errDiv.textContent = 'Network error. Please try again.';
+                if (err.lockUntil) {
+                    startLockoutCountdown(err.lockUntil);
+                } else {
+                    errDiv.style.display = 'block';
+                    errDiv.textContent = err.message || 'Invalid email or password.';
+                }
             }
         });
     </script>
