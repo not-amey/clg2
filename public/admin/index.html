@@ -160,7 +160,9 @@
                             <table class="custom-table" id="students-table">
                                 <thead>
                                     <tr>
-                                        <th>Roll Number</th>
+                                        <th id="th-student-roll" onclick="sortStudentsBy('roll')" style="cursor: pointer; user-select: none;" title="Click to sort by Roll Number">
+                                            Roll Number <i class="fas fa-sort" id="sort-icon-roll" style="margin-left: 0.35rem; font-size: 0.75rem; color: #94A3B8;"></i>
+                                        </th>
                                         <th>Student Info</th>
                                         <th id="th-student-standard" onclick="sortStudentsBy('standard')" style="cursor: pointer; user-select: none;" title="Click to sort by Standard">
                                             Standard <i class="fas fa-sort" id="sort-icon-standard" style="margin-left: 0.35rem; font-size: 0.75rem; color: #94A3B8;"></i>

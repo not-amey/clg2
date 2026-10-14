@@ -4,6 +4,33 @@ const { logAudit } = require('../utils/auditLogger');
 const { success, error } = require('../utils/response');
 
 /**
+ * Natural Alphanumeric Sort for Roll Numbers (Prefix A-Z, then numeric value)
+ */
+function compareRollNumbers(a, b) {
+    const rollA = (a.roll_number || '').toString().trim();
+    const rollB = (b.roll_number || '').toString().trim();
+
+    const matchA = rollA.match(/^([A-Za-z_-]*)(\d+)(.*)$/);
+    const matchB = rollB.match(/^([A-Za-z_-]*)(\d+)(.*)$/);
+
+    if (matchA && matchB) {
+        const prefixA = matchA[1].toUpperCase();
+        const prefixB = matchB[1].toUpperCase();
+        if (prefixA !== prefixB) {
+            return prefixA.localeCompare(prefixB);
+        }
+        const numA = parseInt(matchA[2], 10);
+        const numB = parseInt(matchB[2], 10);
+        if (numA !== numB) {
+            return numA - numB;
+        }
+        return (matchA[3] || '').localeCompare(matchB[3] || '');
+    }
+
+    return rollA.localeCompare(rollB, undefined, { numeric: true, sensitivity: 'base' });
+}
+
+/**
  * Get all students with pagination, search, and department filter
  */
 async function getAll(req, res) {
@@ -65,6 +92,8 @@ async function getAll(req, res) {
                 departments: undefined
             };
         });
+
+        students.sort(compareRollNumbers);
 
         return success(res, students, 'Students fetched successfully', 200, {
             page,

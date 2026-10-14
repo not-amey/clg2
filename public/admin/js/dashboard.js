@@ -361,6 +361,30 @@ function handleStudentFilterChange() {
     loadStudents(1);
 }
 
+function compareRollNumbers(a, b) {
+    const rollA = (a.roll_number || '').toString().trim();
+    const rollB = (b.roll_number || '').toString().trim();
+
+    const matchA = rollA.match(/^([A-Za-z_-]*)(\d+)(.*)$/);
+    const matchB = rollB.match(/^([A-Za-z_-]*)(\d+)(.*)$/);
+
+    if (matchA && matchB) {
+        const prefixA = matchA[1].toUpperCase();
+        const prefixB = matchB[1].toUpperCase();
+        if (prefixA !== prefixB) {
+            return prefixA.localeCompare(prefixB);
+        }
+        const numA = parseInt(matchA[2], 10);
+        const numB = parseInt(matchB[2], 10);
+        if (numA !== numB) {
+            return numA - numB;
+        }
+        return (matchA[3] || '').localeCompare(matchB[3] || '');
+    }
+
+    return rollA.localeCompare(rollB, undefined, { numeric: true, sensitivity: 'base' });
+}
+
 function sortStudentsBy(column) {
     if (state.students.sortBy === column) {
         if (state.students.sortOrder === 'asc') {
@@ -379,8 +403,18 @@ function sortStudentsBy(column) {
 }
 
 function updateSortIcons() {
+    const rollIcon = document.getElementById('sort-icon-roll');
     const stdIcon = document.getElementById('sort-icon-standard');
     const streamIcon = document.getElementById('sort-icon-stream');
+    if (rollIcon) {
+        if (state.students.sortBy === 'roll') {
+            rollIcon.className = state.students.sortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            rollIcon.style.color = '#38BDF8';
+        } else {
+            rollIcon.className = 'fas fa-sort';
+            rollIcon.style.color = '#94A3B8';
+        }
+    }
     if (stdIcon) {
         if (state.students.sortBy === 'standard') {
             stdIcon.className = state.students.sortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
@@ -471,18 +505,19 @@ function renderStudentTable(students) {
     // 1. Column Sort Active: Flat sorted list
     if (state.students.sortBy) {
         const sorted = [...students].sort((a, b) => {
-            const stdA = a.standard || ((a.semester === 12 || a.semester === 2) ? '12th' : '11th');
-            const stdB = b.standard || ((b.semester === 12 || b.semester === 2) ? '12th' : '11th');
-            const strmA = a.stream || a.department_name || '';
-            const strmB = b.stream || b.department_name || '';
-
             let cmp = 0;
-            if (state.students.sortBy === 'standard') {
+            if (state.students.sortBy === 'roll') {
+                cmp = compareRollNumbers(a, b);
+            } else if (state.students.sortBy === 'standard') {
+                const stdA = a.standard || ((a.semester === 12 || a.semester === 2) ? '12th' : '11th');
+                const stdB = b.standard || ((b.semester === 12 || b.semester === 2) ? '12th' : '11th');
                 cmp = stdA.localeCompare(stdB);
-                if (cmp === 0) cmp = strmA.localeCompare(strmB);
+                if (cmp === 0) cmp = compareRollNumbers(a, b);
             } else if (state.students.sortBy === 'stream') {
+                const strmA = a.stream || a.department_name || '';
+                const strmB = b.stream || b.department_name || '';
                 cmp = strmA.localeCompare(strmB);
-                if (cmp === 0) cmp = stdA.localeCompare(stdB);
+                if (cmp === 0) cmp = compareRollNumbers(a, b);
             }
             return state.students.sortOrder === 'asc' ? cmp : -cmp;
         });
@@ -492,6 +527,7 @@ function renderStudentTable(students) {
     }
 
     // 2. Default View: Grouped by Standard (11th, 12th) then Stream (Science, Commerce, Arts)
+    // Within each group, students naturally sorted by Roll Number (Prefix A-Z, then numeric value)
     const groups = [
         { std: '11th', stream: 'Science', label: '11th — Science' },
         { std: '11th', stream: 'Commerce', label: '11th — Commerce' },
@@ -516,6 +552,9 @@ function renderStudentTable(students) {
             const strm = s.stream || s.department_name || '';
             return std.toLowerCase() === g.std.toLowerCase() && strm.toLowerCase() === g.stream.toLowerCase();
         });
+
+        // Natural numeric sort by roll number within group
+        groupStudents.sort(compareRollNumbers);
 
         if (groupStudents.length > 0 || (currentStdFilter && currentStreamFilter)) {
             html += `
@@ -544,6 +583,9 @@ function renderStudentTable(students) {
         const strm = s.stream || s.department_name || '';
         return !groups.some(g => g.std.toLowerCase() === std.toLowerCase() && g.stream.toLowerCase() === strm.toLowerCase());
     });
+
+    // Natural numeric sort for other students as well
+    otherStudents.sort(compareRollNumbers);
 
     if (otherStudents.length > 0) {
         html += `
