@@ -55,8 +55,9 @@ const studentRules = [
         .escape(),
     body('standard').optional({ checkFalsy: true }).isIn(['11th', '12th', '11', '12', 11, 12]).withMessage('Standard must be 11th or 12th.'),
     body('stream').optional({ checkFalsy: true }).isIn(['Arts', 'Commerce', 'Science']).withMessage('Stream must be Arts, Commerce, or Science.'),
+    body('division').optional({ checkFalsy: true }).isIn(['A', 'B', 'C', 'D']).withMessage('Division must be A, B, C, or D.'),
     body('department_id').optional({ checkFalsy: true }).isInt().withMessage('Department ID must be an integer.'),
-    body('semester').optional({ checkFalsy: true }).isInt({ min: 1, max: 12 }).withMessage('Semester must be between 1 and 12.'),
+    body('semester').optional({ checkFalsy: true }).isInt({ min: 1, max: 200 }).withMessage('Semester must be an integer.'),
     body('enrollment_year').isInt({ min: 2000, max: 2100 }).withMessage('Valid enrollment year required.'),
     body('status').optional().isIn(['active', 'suspended']).withMessage('Invalid status.')
 ];

@@ -3,6 +3,50 @@ const { uploadToSupabase } = require('../utils/supabase');
 const { logAudit } = require('../utils/auditLogger');
 const { success, error } = require('../utils/response');
 
+const DIV_LETTER_TO_NUM = { 'A': 1, 'B': 2, 'C': 3, 'D': 4 };
+const DIV_NUM_TO_LETTER = { 1: 'A', 2: 'B', 3: 'C', 4: 'D' };
+
+function encodeSem(standard, division) {
+    const is12 = standard && (standard.toString().includes('12') || standard === 12);
+    const stdBase = is12 ? 120 : 110;
+    const divNum = DIV_LETTER_TO_NUM[(division || 'A').toUpperCase()] || 1;
+    return stdBase + divNum;
+}
+
+function decodeSem(semester, docPath) {
+    let division = 'A';
+    if (docPath) {
+        const m = docPath.match(/div[:=]([A-D])/i);
+        if (m) division = m[1].toUpperCase();
+    }
+
+    let standard = '11th';
+    const sem = parseInt(semester, 10) || 11;
+    if (sem >= 120 && sem < 130) {
+        standard = '12th';
+        if (!docPath || !docPath.match(/div[:=]/i)) {
+            division = DIV_NUM_TO_LETTER[sem % 10] || 'A';
+        }
+    } else if (sem >= 110 && sem < 120) {
+        standard = '11th';
+        if (!docPath || !docPath.match(/div[:=]/i)) {
+            division = DIV_NUM_TO_LETTER[sem % 10] || 'A';
+        }
+    } else if (sem === 12 || sem === 2) {
+        standard = '12th';
+    } else {
+        standard = '11th';
+    }
+
+    return { standard, division };
+}
+
+function cleanDocPath(docPath) {
+    if (!docPath) return null;
+    if (docPath.startsWith('div:') || docPath.startsWith('#div=')) return null;
+    return docPath.replace(/#div=[A-D]/i, '');
+}
+
 /**
  * Natural Alphanumeric Sort for Roll Numbers (Prefix A-Z, then numeric value)
  */
@@ -43,6 +87,7 @@ async function getAll(req, res) {
         let deptId = req.query.department_id ? parseInt(req.query.department_id, 10) : null;
         const stream = req.query.stream ? req.query.stream.trim() : null;
         const standard = req.query.standard ? req.query.standard.trim() : null;
+        const division = req.query.division ? req.query.division.trim().toUpperCase() : null;
         const status = req.query.status || null;
 
         let query = supabase
@@ -62,9 +107,22 @@ async function getAll(req, res) {
                 query = query.eq('department_id', deptId);
             }
 
-            if (standard) {
-                const is12 = standard.includes('12');
-                query = is12 ? query.in('semester', [12, 2]) : query.in('semester', [11, 1]);
+            if (standard || division) {
+                const divNums = division ? [DIV_LETTER_TO_NUM[division] || 1] : [1, 2, 3, 4];
+                let semValues = [];
+                if (!standard || standard.includes('11')) {
+                    divNums.forEach(d => semValues.push(110 + d));
+                    if (!division || division === 'A') {
+                        semValues.push(11, 1);
+                    }
+                }
+                if (!standard || standard.includes('12')) {
+                    divNums.forEach(d => semValues.push(120 + d));
+                    if (!division || division === 'A') {
+                        semValues.push(12, 2);
+                    }
+                }
+                query = query.in('semester', semValues);
             }
         }
 
@@ -81,14 +139,16 @@ async function getAll(req, res) {
         const totalPages = Math.ceil(totalItems / limit) || 1;
 
         const students = (data || []).map(s => {
-            const is12 = s.semester === 12 || s.semester === 2;
+            const { standard: std, division: div } = decodeSem(s.semester, s.document_path);
             const deptName = s.departments ? s.departments.name : null;
             return {
                 ...s,
                 department_name: deptName,
                 department_code: s.departments ? s.departments.code : null,
-                standard: is12 ? '12th' : '11th',
+                standard: std,
+                division: div,
                 stream: deptName || 'Science',
+                document_path: cleanDocPath(s.document_path),
                 departments: undefined
             };
         });
@@ -122,15 +182,17 @@ async function getById(req, res) {
             return error(res, 'Student record not found.', 404);
         }
 
-        const is12 = s.semester === 12 || s.semester === 2;
+        const { standard: std, division: div } = decodeSem(s.semester, s.document_path);
         const deptName = s.departments ? s.departments.name : null;
 
         const student = {
             ...s,
             department_name: deptName,
             department_code: s.departments ? s.departments.code : null,
-            standard: is12 ? '12th' : '11th',
+            standard: std,
+            division: div,
             stream: deptName || 'Science',
+            document_path: cleanDocPath(s.document_path),
             departments: undefined
         };
 
@@ -146,7 +208,7 @@ async function getById(req, res) {
  */
 async function create(req, res) {
     try {
-        const { roll_number, full_name, email, phone, department_id, stream, standard, semester, enrollment_year, status } = req.body;
+        const { roll_number, full_name, email, phone, department_id, stream, standard, division, semester, enrollment_year, status } = req.body;
         
         let document_path = null;
         if (req.file) {
@@ -159,14 +221,9 @@ async function create(req, res) {
             if (dept) resolvedDeptId = dept.id;
         }
 
-        let sem = 11;
-        if (standard) {
-            const stdStr = standard.toString().toLowerCase();
-            sem = (stdStr.includes('12') || stdStr === '12th' || stdStr === '12') ? 12 : 11;
-        } else if (semester) {
-            const sInt = parseInt(semester, 10);
-            sem = (sInt === 12 || sInt === 2) ? 12 : 11;
-        }
+        const div = (division || 'A').toString().trim().toUpperCase();
+        const sem = encodeSem(standard || semester, div);
+        const storedDocPath = document_path ? `${document_path}#div=${div}` : `div:${div}`;
 
         const hasCustomEmail = email && email.trim();
         const cleanEmail = hasCustomEmail ? email.trim() : `${roll_number.trim().toLowerCase().replace(/[^a-z0-9]/g, '_')}@student.local`;
@@ -197,7 +254,7 @@ async function create(req, res) {
                 semester: sem,
                 enrollment_year: parseInt(enrollment_year, 10) || new Date().getFullYear(),
                 status: status || 'active',
-                document_path
+                document_path: storedDocPath
             })
             .select('id')
             .single();
@@ -227,7 +284,7 @@ async function create(req, res) {
 async function update(req, res) {
     try {
         const studentId = req.params.id;
-        const { roll_number, full_name, email, phone, department_id, stream, standard, semester, enrollment_year, status } = req.body;
+        const { roll_number, full_name, email, phone, department_id, stream, standard, division, semester, enrollment_year, status } = req.body;
 
         const { data: current } = await supabase.from('students').select('*').eq('id', studentId).single();
         if (!current) {
@@ -240,13 +297,18 @@ async function update(req, res) {
             if (dept) resolvedDeptId = dept.id;
         }
 
-        let sem = current.semester || 11;
-        if (standard) {
-            const stdStr = standard.toString().toLowerCase();
-            sem = (stdStr.includes('12') || stdStr === '12th' || stdStr === '12') ? 12 : 11;
-        } else if (semester) {
-            const sInt = parseInt(semester, 10);
-            sem = (sInt === 12 || sInt === 2) ? 12 : 11;
+        const currentDecoded = decodeSem(current.semester, current.document_path);
+        const div = division ? division.toString().trim().toUpperCase() : currentDecoded.division;
+        const sem = encodeSem(standard || currentDecoded.standard, div);
+
+        let document_path = current.document_path;
+        if (req.file) {
+            const rawUpload = await uploadToSupabase(req.file.buffer, req.file.originalname, req.file.mimetype, 'student_documents');
+            document_path = `${rawUpload}#div=${div}`;
+        } else if (current.document_path && !current.document_path.startsWith('div:')) {
+            document_path = `${cleanDocPath(current.document_path)}#div=${div}`;
+        } else {
+            document_path = `div:${div}`;
         }
 
         const hasCustomEmail = email && email.trim();
@@ -266,11 +328,6 @@ async function update(req, res) {
 
         if (duplicate && duplicate.length > 0) {
             return error(res, 'Another student with this roll number or email already exists.', 400);
-        }
-
-        let document_path = current.document_path;
-        if (req.file) {
-            document_path = await uploadToSupabase(req.file.buffer, req.file.originalname, req.file.mimetype, 'student_documents');
         }
 
         const { error: updateErr } = await supabase
@@ -339,4 +396,4 @@ async function remove(req, res) {
     }
 }
 
-module.exports = { getAll, getById, create, update, remove };
+module.exports = { getAll, getById, create, update, remove, decodeSem, encodeSem };

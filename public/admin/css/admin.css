@@ -1062,7 +1062,8 @@ textarea.form-control {
 /* Students Tab: Sortable Headers */
 #th-student-roll:hover,
 #th-student-standard:hover,
-#th-student-stream:hover {
+#th-student-stream:hover,
+#th-student-division:hover {
     color: #FFF;
     background: #24344D;
 }

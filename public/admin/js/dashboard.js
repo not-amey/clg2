@@ -6,7 +6,7 @@ let state = {
     currentTab: 'dashboard',
     departments: [],
     facultyList: [],
-    students: { page: 1, limit: 50, totalPages: 1, search: '', standard: '', stream: '', status: '', sortBy: null, sortOrder: 'asc', allStudents: [] },
+    students: { page: 1, limit: 50, totalPages: 1, search: '', standard: '', stream: '', division: '', status: '', sortBy: null, sortOrder: 'asc', allStudents: [] },
     faculty: { page: 1, limit: 10, totalPages: 1, search: '', dept: '', status: '' },
     courses: { page: 1, limit: 10, totalPages: 1, search: '', dept: '' },
     notices: { page: 1, limit: 10, totalPages: 1, search: '', category: '', target: '' },
@@ -275,6 +275,13 @@ function handleStreamChange() {
     }
 }
 
+function handleDivisionChange() {
+    const divSelect = document.getElementById('modal-student-division');
+    if (divSelect && divSelect.value) {
+        clearFieldError('modal-student-division', 'error-student-division');
+    }
+}
+
 function showFieldError(inputId, errorId, message) {
     const input = document.getElementById(inputId);
     const errorEl = document.getElementById(errorId);
@@ -303,6 +310,7 @@ function clearStudentValidationErrors() {
     clearFieldError('modal-student-phone', 'error-student-phone');
     clearFieldError('modal-student-standard', 'error-student-standard');
     clearFieldError('modal-student-stream', 'error-student-stream');
+    clearFieldError('modal-student-division', 'error-student-division');
 }
 
 function validateStudentForm() {
@@ -340,6 +348,14 @@ function validateStudentForm() {
         showFieldError('modal-student-stream', 'error-student-stream', 'Stream is required.');
         isValid = false;
         if (!firstInvalidEl) firstInvalidEl = streamSelect;
+    }
+
+    // 4. Division (Mandatory)
+    const divSelect = document.getElementById('modal-student-division');
+    if (!divSelect || !divSelect.value) {
+        showFieldError('modal-student-division', 'error-student-division', 'Division is required.');
+        isValid = false;
+        if (!firstInvalidEl) firstInvalidEl = divSelect;
     }
 
     if (!isValid && firstInvalidEl) {
@@ -406,6 +422,7 @@ function updateSortIcons() {
     const rollIcon = document.getElementById('sort-icon-roll');
     const stdIcon = document.getElementById('sort-icon-standard');
     const streamIcon = document.getElementById('sort-icon-stream');
+    const divIcon = document.getElementById('sort-icon-division');
     if (rollIcon) {
         if (state.students.sortBy === 'roll') {
             rollIcon.className = state.students.sortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
@@ -433,6 +450,15 @@ function updateSortIcons() {
             streamIcon.style.color = '#94A3B8';
         }
     }
+    if (divIcon) {
+        if (state.students.sortBy === 'division') {
+            divIcon.className = state.students.sortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            divIcon.style.color = '#38BDF8';
+        } else {
+            divIcon.className = 'fas fa-sort';
+            divIcon.style.color = '#94A3B8';
+        }
+    }
 }
 
 async function loadStudents(page = 1) {
@@ -440,6 +466,7 @@ async function loadStudents(page = 1) {
     const search = document.getElementById('search-student')?.value.trim() || '';
     const standard = document.getElementById('filter-student-standard')?.value || '';
     const stream = document.getElementById('filter-student-stream')?.value || '';
+    const division = document.getElementById('filter-student-division')?.value || '';
     const status = document.getElementById('filter-student-status')?.value || '';
 
     try {
@@ -450,6 +477,7 @@ async function loadStudents(page = 1) {
         } else {
             if (standard) query += `&standard=${encodeURIComponent(standard)}`;
             if (stream) query += `&stream=${encodeURIComponent(stream)}`;
+            if (division) query += `&division=${encodeURIComponent(division)}`;
         }
 
         const res = await apiRequest(`/api/students?${query}`);
@@ -469,6 +497,7 @@ function renderStudentRow(s) {
     const contactText = hasRealEmail ? s.email : (s.phone ? 'Phone: ' + s.phone : 'No Contact Info');
     const std = s.standard || ((s.semester === 12 || s.semester === 2) ? '12th' : '11th');
     const strm = s.stream || s.department_name || 'Science';
+    const div = s.division || 'A';
 
     return `
     <tr>
@@ -479,6 +508,7 @@ function renderStudentRow(s) {
         </td>
         <td><span class="badge" style="background: #1E293B; border: 1px solid #334155; color: #E2E8F0;">${std}</span></td>
         <td><span class="badge" style="background: #1E293B; border: 1px solid #334155; color: #E2E8F0;">${strm}</span></td>
+        <td><span class="badge" style="background: #1E293B; border: 1px solid #334155; color: #E2E8F0;">Div ${div}</span></td>
         <td><span class="badge badge-${s.status}">${s.status}</span></td>
         <td>
             ${s.document_path ? `<a href="${s.document_path}" target="_blank" class="btn btn-sm btn-secondary"><i class="fas fa-file-pdf"></i> Doc</a>` : '<span style="color: var(--text-dim);">None</span>'}
@@ -498,7 +528,7 @@ function renderStudentTable(students) {
     if (!tableBody) return;
 
     if (!students || students.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">No students found matching your criteria.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">No students found matching your criteria.</td></tr>`;
         return;
     }
 
@@ -518,6 +548,11 @@ function renderStudentTable(students) {
                 const strmB = b.stream || b.department_name || '';
                 cmp = strmA.localeCompare(strmB);
                 if (cmp === 0) cmp = compareRollNumbers(a, b);
+            } else if (state.students.sortBy === 'division') {
+                const divA = a.division || 'A';
+                const divB = b.division || 'A';
+                cmp = divA.localeCompare(divB);
+                if (cmp === 0) cmp = compareRollNumbers(a, b);
             }
             return state.students.sortOrder === 'asc' ? cmp : -cmp;
         });
@@ -526,19 +561,28 @@ function renderStudentTable(students) {
         return;
     }
 
-    // 2. Default View: Grouped by Standard (11th, 12th) then Stream (Science, Commerce, Arts)
+    // 2. Default View: Grouped by Standard (11th, 12th), Stream (Science, Commerce, Arts), then Division (A, B, C, D)
     // Within each group, students naturally sorted by Roll Number (Prefix A-Z, then numeric value)
-    const groups = [
-        { std: '11th', stream: 'Science', label: '11th — Science' },
-        { std: '11th', stream: 'Commerce', label: '11th — Commerce' },
-        { std: '11th', stream: 'Arts', label: '11th — Arts' },
-        { std: '12th', stream: 'Science', label: '12th — Science' },
-        { std: '12th', stream: 'Commerce', label: '12th — Commerce' },
-        { std: '12th', stream: 'Arts', label: '12th — Arts' }
-    ];
+    const standards = ['11th', '12th'];
+    const streams = ['Science', 'Commerce', 'Arts'];
+    const divisions = ['A', 'B', 'C', 'D'];
+    const groups = [];
+    standards.forEach(std => {
+        streams.forEach(stream => {
+            divisions.forEach(div => {
+                groups.push({
+                    std,
+                    stream,
+                    div,
+                    label: `${std} — ${stream} — ${div}`
+                });
+            });
+        });
+    });
 
     const currentStdFilter = document.getElementById('filter-student-standard')?.value || '';
     const currentStreamFilter = document.getElementById('filter-student-stream')?.value || '';
+    const currentDivFilter = document.getElementById('filter-student-division')?.value || '';
 
     let html = '';
     let renderedCount = 0;
@@ -546,20 +590,25 @@ function renderStudentTable(students) {
     groups.forEach(g => {
         if (currentStdFilter && g.std !== currentStdFilter) return;
         if (currentStreamFilter && g.stream !== currentStreamFilter) return;
+        if (currentDivFilter && g.div !== currentDivFilter) return;
 
         const groupStudents = students.filter(s => {
             const std = s.standard || ((s.semester === 12 || s.semester === 2) ? '12th' : '11th');
             const strm = s.stream || s.department_name || '';
-            return std.toLowerCase() === g.std.toLowerCase() && strm.toLowerCase() === g.stream.toLowerCase();
+            const div = (s.division || 'A').toUpperCase();
+            return std.toLowerCase() === g.std.toLowerCase() &&
+                   strm.toLowerCase() === g.stream.toLowerCase() &&
+                   div === g.div;
         });
 
         // Natural numeric sort by roll number within group
         groupStudents.sort(compareRollNumbers);
 
-        if (groupStudents.length > 0 || (currentStdFilter && currentStreamFilter)) {
+        const isExactFilter = currentStdFilter && currentStreamFilter && currentDivFilter;
+        if (groupStudents.length > 0 || isExactFilter) {
             html += `
             <tr class="table-group-header" style="background: rgba(30, 41, 59, 0.75);">
-                <td colspan="7" style="padding: 0.65rem 1.25rem; font-weight: 700; color: #93C5FD; border-top: 1px solid #334155; border-bottom: 1px solid #334155;">
+                <td colspan="8" style="padding: 0.65rem 1.25rem; font-weight: 700; color: #93C5FD; border-top: 1px solid #334155; border-bottom: 1px solid #334155;">
                     <i class="fas fa-layer-group" style="margin-right: 0.5rem; color: #60A5FA;"></i>
                     ${g.label}
                     <span class="badge" style="background: #0F172A; border: 1px solid #334155; color: #94A3B8; font-size: 0.72rem; margin-left: 0.6rem; font-weight: 500;">
@@ -573,7 +622,7 @@ function renderStudentTable(students) {
                 html += groupStudents.map(renderStudentRow).join('');
                 renderedCount += groupStudents.length;
             } else {
-                html += `<tr><td colspan="7" style="text-align: center; color: var(--text-dim); font-size: 0.85rem; padding: 1rem;">No students in this group.</td></tr>`;
+                html += `<tr><td colspan="8" style="text-align: center; color: var(--text-dim); font-size: 0.85rem; padding: 1rem;">No students in this group.</td></tr>`;
             }
         }
     });
@@ -581,7 +630,8 @@ function renderStudentTable(students) {
     const otherStudents = students.filter(s => {
         const std = s.standard || ((s.semester === 12 || s.semester === 2) ? '12th' : '11th');
         const strm = s.stream || s.department_name || '';
-        return !groups.some(g => g.std.toLowerCase() === std.toLowerCase() && g.stream.toLowerCase() === strm.toLowerCase());
+        const div = (s.division || 'A').toUpperCase();
+        return !groups.some(g => g.std.toLowerCase() === std.toLowerCase() && g.stream.toLowerCase() === strm.toLowerCase() && g.div === div);
     });
 
     // Natural numeric sort for other students as well
@@ -590,7 +640,7 @@ function renderStudentTable(students) {
     if (otherStudents.length > 0) {
         html += `
         <tr class="table-group-header" style="background: rgba(30, 41, 59, 0.75);">
-            <td colspan="7" style="padding: 0.65rem 1.25rem; font-weight: 700; color: #93C5FD; border-top: 1px solid #334155; border-bottom: 1px solid #334155;">
+            <td colspan="8" style="padding: 0.65rem 1.25rem; font-weight: 700; color: #93C5FD; border-top: 1px solid #334155; border-bottom: 1px solid #334155;">
                 <i class="fas fa-layer-group" style="margin-right: 0.5rem; color: #60A5FA;"></i>
                 Other Students
                 <span class="badge" style="background: #0F172A; border: 1px solid #334155; color: #94A3B8; font-size: 0.72rem; margin-left: 0.6rem; font-weight: 500;">
@@ -603,8 +653,8 @@ function renderStudentTable(students) {
         renderedCount += otherStudents.length;
     }
 
-    if (renderedCount === 0 && (!currentStdFilter || !currentStreamFilter)) {
-        html = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">No students found matching your criteria.</td></tr>`;
+    if (renderedCount === 0 && (!currentStdFilter || !currentStreamFilter || !currentDivFilter)) {
+        html = `<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">No students found matching your criteria.</td></tr>`;
     }
 
     tableBody.innerHTML = html;
@@ -621,6 +671,9 @@ function openStudentModal(id = null) {
     clearStudentValidationErrors();
     populateYearPicker();
     handleStandardChange();
+
+    const divSelect = document.getElementById('modal-student-division');
+    if (divSelect) divSelect.value = '';
 
     const phoneInput = document.getElementById('modal-student-phone');
     if (phoneInput) {
@@ -649,6 +702,10 @@ function openStudentModal(id = null) {
                 if (streamVal) {
                     document.getElementById('modal-student-stream').value = streamVal;
                     handleStreamChange();
+                }
+
+                if (divSelect) {
+                    divSelect.value = s.division || 'A';
                 }
 
                 populateYearPicker(s.enrollment_year);

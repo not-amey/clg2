@@ -144,6 +144,13 @@
                                 <option value="Commerce">Commerce</option>
                                 <option value="Science">Science</option>
                             </select>
+                            <select id="filter-student-division" class="select-control" onchange="handleStudentFilterChange()">
+                                <option value="">All Divisions</option>
+                                <option value="A">Division A</option>
+                                <option value="B">Division B</option>
+                                <option value="C">Division C</option>
+                                <option value="D">Division D</option>
+                            </select>
                             <select id="filter-student-status" class="select-control" onchange="handleStudentFilterChange()">
                                 <option value="">All Statuses</option>
                                 <option value="active">Active</option>
@@ -169,6 +176,9 @@
                                         </th>
                                         <th id="th-student-stream" onclick="sortStudentsBy('stream')" style="cursor: pointer; user-select: none;" title="Click to sort by Stream">
                                             Stream <i class="fas fa-sort" id="sort-icon-stream" style="margin-left: 0.35rem; font-size: 0.75rem; color: #94A3B8;"></i>
+                                        </th>
+                                        <th id="th-student-division" onclick="sortStudentsBy('division')" style="cursor: pointer; user-select: none;" title="Click to sort by Division">
+                                            Division <i class="fas fa-sort" id="sort-icon-division" style="margin-left: 0.35rem; font-size: 0.75rem; color: #94A3B8;"></i>
                                         </th>
                                         <th>Status</th>
                                         <th>Document</th>
@@ -456,6 +466,17 @@
                             <option value="Science">Science</option>
                         </select>
                         <span class="inline-error" id="error-student-stream" style="display: none; color: #EF4444; font-size: 0.78rem; margin-top: 0.25rem;"></span>
+                    </div>
+                    <div class="form-group">
+                        <label>Division *</label>
+                        <select id="modal-student-division" name="division" class="form-control" required onchange="handleDivisionChange()">
+                            <option value="">Select Division</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                        </select>
+                        <span class="inline-error" id="error-student-division" style="display: none; color: #EF4444; font-size: 0.78rem; margin-top: 0.25rem;"></span>
                     </div>
                     <input type="hidden" id="modal-student-dept" name="department_id">
                     <div class="form-group">
