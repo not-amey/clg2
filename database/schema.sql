@@ -153,7 +153,8 @@ INSERT INTO site_settings (key, value, type, label, category) VALUES
 ('office_hours', '7:30 AM to 12:00 PM (Morning Shift)', 'text', 'Office Hours', 'contact'),
 ('img_assembly', 'https://raw.githubusercontent.com/not-amey/clgsite/main/prayer.png', 'image', 'Campus Assembly Photo', 'images'),
 ('img_lab', 'https://raw.githubusercontent.com/not-amey/clgsite/main/lab.png', 'image', 'Science Laboratory Photo', 'images'),
-('img_principal', 'https://raw.githubusercontent.com/not-amey/clgsite/main/lab.png', 'image', 'Principal Message Image', 'images')
+('img_principal', 'https://raw.githubusercontent.com/not-amey/clgsite/main/lab.png', 'image', 'Principal Message Image', 'images'),
+('site_logo', '/images/default-logo.svg', 'image', 'Site Official Logo', 'branding')
 ON CONFLICT (key) DO NOTHING;
 
 -- Indexes for performance

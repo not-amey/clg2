@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const user = await checkSession();
     if (!user) return;
 
+    loadAdminHeaderLogo();
     await loadDepartments();
     switchTab('dashboard');
 });
@@ -1503,8 +1504,32 @@ const CMS_DEFAULTS = {
     img_hero_bg: 'https://raw.githubusercontent.com/not-amey/clgsite/main/prayer.png',
     img_assembly: 'https://raw.githubusercontent.com/not-amey/clgsite/main/prayer.png',
     img_lab: 'https://raw.githubusercontent.com/not-amey/clgsite/main/lab.png',
-    img_principal: 'https://raw.githubusercontent.com/not-amey/clgsite/main/lab.png'
+    img_principal: 'https://raw.githubusercontent.com/not-amey/clgsite/main/lab.png',
+    site_logo: '/images/default-logo.svg'
 };
+
+async function loadAdminHeaderLogo() {
+    try {
+        const res = await apiRequest('/api/settings');
+        if (res && res.success && res.data) {
+            const logoUrl = res.data.site_logo || '/images/default-logo.svg';
+            updateAdminPanelHeaderLogo(logoUrl);
+        }
+    } catch (e) {
+        // Fallback default
+    }
+}
+
+function updateAdminPanelHeaderLogo(logoUrl) {
+    const brandIcon = document.getElementById('admin-brand-icon') || document.querySelector('.sidebar-header .brand-icon');
+    if (!brandIcon) return;
+
+    if (logoUrl && !logoUrl.includes('default-logo.svg')) {
+        brandIcon.innerHTML = `<img src="${logoUrl}" alt="Site Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 6px;">`;
+    } else {
+        brandIcon.innerHTML = `<i class="fas fa-university"></i>`;
+    }
+}
 
 async function loadCMSSettings() {
     try {
@@ -1535,6 +1560,24 @@ async function loadCMSSettings() {
                 imgEl.src = imgVal || '';
             }
         });
+
+        // Populate Site Logo preview
+        const logoPreviewEl = document.getElementById('preview-site_logo');
+        const logoBadgeStatus = document.getElementById('logo-badge-status');
+        const currentLogoUrl = (settings.site_logo && settings.site_logo.trim() !== '') ? settings.site_logo : '/images/default-logo.svg';
+
+        if (logoPreviewEl) {
+            logoPreviewEl.src = currentLogoUrl;
+            logoPreviewEl.onerror = () => {
+                logoPreviewEl.src = '/images/default-logo.svg';
+            };
+        }
+
+        if (logoBadgeStatus) {
+            logoBadgeStatus.textContent = (settings.site_logo && !settings.site_logo.includes('default-logo.svg')) ? 'Custom Logo' : 'SG Estd 1998';
+        }
+
+        updateAdminPanelHeaderLogo(currentLogoUrl);
     } catch (err) {
         showToast('Failed to load CMS settings', 'error');
     }
@@ -1590,5 +1633,149 @@ async function uploadCMSImage(key) {
         }
     } catch (err) {
         showToast(err.message || 'Failed to upload image', 'error');
+    }
+}
+
+// Logo Selection & Upload Handler
+let selectedLogoFile = null;
+
+function handleLogoSelect(event) {
+    const input = event.target;
+    const errorEl = document.getElementById('logo-error-msg');
+    const actionsContainer = document.getElementById('logo-actions-container');
+    const previewEl = document.getElementById('preview-new-site_logo');
+    const fileDetailsEl = document.getElementById('logo-file-details');
+    const selectedNameEl = document.getElementById('selected-logo-name');
+
+    if (errorEl) {
+        errorEl.style.display = 'none';
+        errorEl.textContent = '';
+    }
+
+    if (!input.files || input.files.length === 0) {
+        cancelLogoSelection();
+        return;
+    }
+
+    const file = input.files[0];
+    const fileName = file.name.toLowerCase();
+    const allowedExtensions = ['.png', '.jpg', '.jpeg', '.svg'];
+    const isAllowedExt = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+    // Validate file type and size (max 2MB = 2097152 bytes)
+    if (!isAllowedExt || file.size > 2 * 1024 * 1024) {
+        const msg = 'Please upload a PNG, JPG, or SVG under 2MB';
+        if (errorEl) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+        }
+        showToast(msg, 'error');
+        cancelLogoSelection();
+        return;
+    }
+
+    selectedLogoFile = file;
+    if (selectedNameEl) selectedNameEl.textContent = file.name;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        if (previewEl) previewEl.src = e.target.result;
+        if (fileDetailsEl) {
+            const sizeKb = (file.size / 1024).toFixed(1);
+            fileDetailsEl.innerHTML = `<strong>${file.name}</strong><br><span style="font-size: 0.75rem;">${sizeKb} KB</span>`;
+        }
+        if (actionsContainer) actionsContainer.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function cancelLogoSelection() {
+    selectedLogoFile = null;
+    const fileInput = document.getElementById('file-site_logo');
+    if (fileInput) fileInput.value = '';
+
+    const selectedNameEl = document.getElementById('selected-logo-name');
+    if (selectedNameEl) selectedNameEl.textContent = '';
+
+    const actionsContainer = document.getElementById('logo-actions-container');
+    if (actionsContainer) actionsContainer.style.display = 'none';
+
+    const previewEl = document.getElementById('preview-new-site_logo');
+    if (previewEl) previewEl.src = '';
+
+    const errorEl = document.getElementById('logo-error-msg');
+    if (errorEl) {
+        errorEl.style.display = 'none';
+        errorEl.textContent = '';
+    }
+}
+
+async function saveNewLogo() {
+    const errorEl = document.getElementById('logo-error-msg');
+    const saveBtn = document.getElementById('btn-save-logo');
+
+    if (!selectedLogoFile) {
+        const msg = 'Please upload a PNG, JPG, or SVG under 2MB';
+        if (errorEl) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+        }
+        showToast(msg, 'error');
+        return;
+    }
+
+    if (selectedLogoFile.size > 2 * 1024 * 1024) {
+        const msg = 'Please upload a PNG, JPG, or SVG under 2MB';
+        if (errorEl) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+        }
+        showToast(msg, 'error');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('logo', selectedLogoFile);
+
+    try {
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+
+        showToast('Saving site logo...', 'info');
+        const res = await apiRequest('/api/settings/upload-logo', 'POST', formData, true);
+
+        if (res && res.success && res.data && res.data.url) {
+            showToast('Logo updated successfully!', 'success');
+
+            const currentPreview = document.getElementById('preview-site_logo');
+            if (currentPreview) currentPreview.src = res.data.url;
+
+            const logoBadgeStatus = document.getElementById('logo-badge-status');
+            if (logoBadgeStatus) logoBadgeStatus.textContent = 'Custom Logo';
+
+            updateAdminPanelHeaderLogo(res.data.url);
+            cancelLogoSelection();
+        } else {
+            const msg = (res && res.message) ? res.message : 'Please upload a PNG, JPG, or SVG under 2MB';
+            if (errorEl) {
+                errorEl.textContent = msg;
+                errorEl.style.display = 'block';
+            }
+            showToast(msg, 'error');
+        }
+    } catch (err) {
+        const msg = err.message || 'Please upload a PNG, JPG, or SVG under 2MB';
+        if (errorEl) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+        }
+        showToast(msg, 'error');
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-check"></i> Save';
+        }
     }
 }

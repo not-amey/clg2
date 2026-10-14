@@ -491,6 +491,27 @@
                 }
             }
         });
+
+        async function loadLoginBranding() {
+            try {
+                const res = await fetch('/api/settings');
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.success && data.data && data.data.site_logo && !data.data.site_logo.includes('default-logo.svg')) {
+                    const logoLeft = document.querySelector('.college-logo-left');
+                    if (logoLeft) {
+                        logoLeft.innerHTML = `<img src="${data.data.site_logo}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">`;
+                        logoLeft.style.overflow = 'hidden';
+                    }
+                    const mobileLogo = document.querySelector('.mobile-logo');
+                    if (mobileLogo) {
+                        mobileLogo.innerHTML = `<img src="${data.data.site_logo}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">`;
+                        mobileLogo.style.overflow = 'hidden';
+                    }
+                }
+            } catch (e) {}
+        }
+        loadLoginBranding();
     </script>
 </body>
 </html>

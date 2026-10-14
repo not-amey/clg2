@@ -18,7 +18,8 @@ const DEFAULT_SETTINGS = {
     img_hero_bg: 'https://raw.githubusercontent.com/not-amey/clgsite/main/prayer.png',
     img_assembly: 'https://raw.githubusercontent.com/not-amey/clgsite/main/prayer.png',
     img_lab: 'https://raw.githubusercontent.com/not-amey/clgsite/main/lab.png',
-    img_principal: 'https://raw.githubusercontent.com/not-amey/clgsite/main/lab.png'
+    img_principal: 'https://raw.githubusercontent.com/not-amey/clgsite/main/lab.png',
+    site_logo: '/images/default-logo.svg'
 };
 
 /**

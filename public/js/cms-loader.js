@@ -105,6 +105,45 @@ window.closeCreditsModalOnBackdrop = function (event) {
                     el.style.backgroundImage = `linear-gradient(135deg, rgba(15, 33, 55, 0.90) 0%, rgba(27, 54, 93, 0.85) 100%), url('${settings[key]}')`;
                 }
             });
+
+            // 4. Update Site Logo on public website header and mobile navbar
+            if (settings.site_logo && settings.site_logo.trim() !== '' && !settings.site_logo.includes('default-logo.svg')) {
+                const logoUrl = settings.site_logo;
+
+                // Update desktop header college seals
+                document.querySelectorAll('.college-seal').forEach(seal => {
+                    if (!seal.dataset.fallbackHtml) {
+                        seal.dataset.fallbackHtml = seal.innerHTML;
+                    }
+                    seal.classList.add('has-custom-logo');
+                    seal.style.overflow = 'hidden';
+                    seal.innerHTML = `<img src="${logoUrl}" alt="College Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">`;
+                    const img = seal.querySelector('img');
+                    if (img) {
+                        img.onerror = function () {
+                            seal.innerHTML = seal.dataset.fallbackHtml || '';
+                            seal.classList.remove('has-custom-logo');
+                        };
+                    }
+                });
+
+                // Update mobile header & drawer seals
+                document.querySelectorAll('.mobile-seal').forEach(seal => {
+                    if (!seal.dataset.fallbackHtml) {
+                        seal.dataset.fallbackHtml = seal.innerHTML;
+                    }
+                    seal.classList.add('has-custom-logo');
+                    seal.style.overflow = 'hidden';
+                    seal.innerHTML = `<img src="${logoUrl}" alt="College Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">`;
+                    const img = seal.querySelector('img');
+                    if (img) {
+                        img.onerror = function () {
+                            seal.innerHTML = seal.dataset.fallbackHtml || '';
+                            seal.classList.remove('has-custom-logo');
+                        };
+                    }
+                });
+            }
         } catch (err) {
             console.log('[CMS Loader]: Operating with default static fallback content.');
         }
