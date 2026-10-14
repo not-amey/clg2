@@ -6,7 +6,7 @@ let state = {
     currentTab: 'dashboard',
     departments: [],
     facultyList: [],
-    students: { page: 1, limit: 10, totalPages: 1, search: '', dept: '', status: '' },
+    students: { page: 1, limit: 50, totalPages: 1, search: '', standard: '', stream: '', status: '', sortBy: null, sortOrder: 'asc', allStudents: [] },
     faculty: { page: 1, limit: 10, totalPages: 1, search: '', dept: '', status: '' },
     courses: { page: 1, limit: 10, totalPages: 1, search: '', dept: '' },
     notices: { page: 1, limit: 10, totalPages: 1, search: '', category: '', target: '' },
@@ -224,47 +224,348 @@ async function loadDashboardStats() {
 }
 
 /* ================= 2. STUDENTS ================= */
+
+function populateYearPicker(selectedYear = null) {
+    const yearSelect = document.getElementById('modal-student-year');
+    if (!yearSelect) return;
+
+    const currentYear = new Date().getFullYear();
+    const startYear = currentYear - 5;
+    const endYear = currentYear + 2;
+    const targetYear = selectedYear ? parseInt(selectedYear, 10) : currentYear;
+
+    let html = '';
+    for (let y = endYear; y >= startYear; y--) {
+        html += `<option value="${y}" ${y === targetYear ? 'selected' : ''}>${y}</option>`;
+    }
+    yearSelect.innerHTML = html;
+}
+
+function handleStandardChange() {
+    const standardSelect = document.getElementById('modal-student-standard');
+    const streamSelect = document.getElementById('modal-student-stream');
+    if (!standardSelect || !streamSelect) return;
+
+    const selectedStd = standardSelect.value;
+    if (selectedStd) {
+        streamSelect.disabled = false;
+        if (streamSelect.options.length > 0 && streamSelect.options[0].value === '') {
+            streamSelect.options[0].text = 'Select Stream';
+        }
+        clearFieldError('modal-student-standard', 'error-student-standard');
+    } else {
+        streamSelect.disabled = true;
+        streamSelect.value = '';
+        if (streamSelect.options.length > 0 && streamSelect.options[0].value === '') {
+            streamSelect.options[0].text = 'Select Standard first';
+        }
+    }
+}
+
+function handleStreamChange() {
+    const streamSelect = document.getElementById('modal-student-stream');
+    if (!streamSelect) return;
+    if (streamSelect.value) {
+        clearFieldError('modal-student-stream', 'error-student-stream');
+        const deptObj = state.departments.find(d => d.name.toLowerCase() === streamSelect.value.toLowerCase());
+        const deptInput = document.getElementById('modal-student-dept');
+        if (deptInput && deptObj) {
+            deptInput.value = deptObj.id;
+        }
+    }
+}
+
+function showFieldError(inputId, errorId, message) {
+    const input = document.getElementById(inputId);
+    const errorEl = document.getElementById(errorId);
+    if (input) {
+        input.style.borderColor = '#EF4444';
+    }
+    if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+    }
+}
+
+function clearFieldError(inputId, errorId) {
+    const input = document.getElementById(inputId);
+    const errorEl = document.getElementById(errorId);
+    if (input) {
+        input.style.borderColor = '';
+    }
+    if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.style.display = 'none';
+    }
+}
+
+function clearStudentValidationErrors() {
+    clearFieldError('modal-student-phone', 'error-student-phone');
+    clearFieldError('modal-student-standard', 'error-student-standard');
+    clearFieldError('modal-student-stream', 'error-student-stream');
+}
+
+function validateStudentForm() {
+    clearStudentValidationErrors();
+    let isValid = true;
+    let firstInvalidEl = null;
+
+    // 1. Phone Number (Mandatory + format check)
+    const phoneInput = document.getElementById('modal-student-phone');
+    const phoneVal = phoneInput ? phoneInput.value.trim() : '';
+    if (!phoneVal) {
+        showFieldError('modal-student-phone', 'error-student-phone', 'Phone number is required.');
+        isValid = false;
+        if (!firstInvalidEl) firstInvalidEl = phoneInput;
+    } else {
+        const digits = phoneVal.replace(/\D/g, '');
+        if (digits.length < 10 || digits.length > 15) {
+            showFieldError('modal-student-phone', 'error-student-phone', 'Please enter a valid phone number (at least 10 digits).');
+            isValid = false;
+            if (!firstInvalidEl) firstInvalidEl = phoneInput;
+        }
+    }
+
+    // 2. Standard (Mandatory)
+    const stdSelect = document.getElementById('modal-student-standard');
+    if (!stdSelect || !stdSelect.value) {
+        showFieldError('modal-student-standard', 'error-student-standard', 'Standard is required.');
+        isValid = false;
+        if (!firstInvalidEl) firstInvalidEl = stdSelect;
+    }
+
+    // 3. Stream (Mandatory)
+    const streamSelect = document.getElementById('modal-student-stream');
+    if (!streamSelect || !streamSelect.value) {
+        showFieldError('modal-student-stream', 'error-student-stream', 'Stream is required.');
+        isValid = false;
+        if (!firstInvalidEl) firstInvalidEl = streamSelect;
+    }
+
+    if (!isValid && firstInvalidEl) {
+        firstInvalidEl.focus();
+    }
+
+    return isValid;
+}
+
+let studentSearchTimeout = null;
+function handleStudentSearch() {
+    clearTimeout(studentSearchTimeout);
+    studentSearchTimeout = setTimeout(() => {
+        loadStudents(1);
+    }, 250);
+}
+
+function handleStudentFilterChange() {
+    loadStudents(1);
+}
+
+function sortStudentsBy(column) {
+    if (state.students.sortBy === column) {
+        if (state.students.sortOrder === 'asc') {
+            state.students.sortOrder = 'desc';
+        } else {
+            // Revert back to default grouped view on 3rd click
+            state.students.sortBy = null;
+            state.students.sortOrder = 'asc';
+        }
+    } else {
+        state.students.sortBy = column;
+        state.students.sortOrder = 'asc';
+    }
+    updateSortIcons();
+    renderStudentTable(state.students.allStudents || []);
+}
+
+function updateSortIcons() {
+    const stdIcon = document.getElementById('sort-icon-standard');
+    const streamIcon = document.getElementById('sort-icon-stream');
+    if (stdIcon) {
+        if (state.students.sortBy === 'standard') {
+            stdIcon.className = state.students.sortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            stdIcon.style.color = '#38BDF8';
+        } else {
+            stdIcon.className = 'fas fa-sort';
+            stdIcon.style.color = '#94A3B8';
+        }
+    }
+    if (streamIcon) {
+        if (state.students.sortBy === 'stream') {
+            streamIcon.className = state.students.sortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            streamIcon.style.color = '#38BDF8';
+        } else {
+            streamIcon.className = 'fas fa-sort';
+            streamIcon.style.color = '#94A3B8';
+        }
+    }
+}
+
 async function loadStudents(page = 1) {
     state.students.page = page;
-    const search = document.getElementById('search-student')?.value || '';
-    const dept = document.getElementById('filter-student-dept')?.value || '';
+    const search = document.getElementById('search-student')?.value.trim() || '';
+    const standard = document.getElementById('filter-student-standard')?.value || '';
+    const stream = document.getElementById('filter-student-stream')?.value || '';
     const status = document.getElementById('filter-student-status')?.value || '';
 
     try {
-        const query = `page=${page}&limit=${state.students.limit}&search=${encodeURIComponent(search)}&department_id=${dept}&status=${status}`;
+        let query = `page=${page}&limit=${state.students.limit || 50}&status=${status}`;
+        if (search) {
+            // Search works across all students regardless of active standard / stream filter
+            query += `&search=${encodeURIComponent(search)}`;
+        } else {
+            if (standard) query += `&standard=${encodeURIComponent(standard)}`;
+            if (stream) query += `&stream=${encodeURIComponent(stream)}`;
+        }
+
         const res = await apiRequest(`/api/students?${query}`);
         if (!res.success) return;
 
-        const tableBody = document.getElementById('student-table-body');
-        tableBody.innerHTML = res.data.map(s => {
-            const hasRealEmail = s.email && !s.email.endsWith('@student.local');
-            const contactText = hasRealEmail ? s.email : (s.phone ? 'Phone: ' + s.phone : 'No Contact Info');
-            return `
-            <tr>
-                <td><strong>${s.roll_number}</strong></td>
-                <td>
-                    <div style="font-weight: 600;">${s.full_name}</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted);">${contactText}</div>
-                </td>
-                <td>${s.department_name || 'Unassigned'}</td>
-                <td><span class="badge badge-${s.status}">${s.status}</span></td>
-                <td>
-                    ${s.document_path ? `<a href="${s.document_path}" target="_blank" class="btn btn-sm btn-secondary"><i class="fas fa-file-pdf"></i> Doc</a>` : '<span style="color: var(--text-dim);">None</span>'}
-                </td>
-                <td>
-                    <div style="display: flex; gap: 0.35rem;">
-                        <button class="btn btn-sm btn-secondary" onclick="openStudentModal(${s.id})"><i class="fas fa-edit"></i> Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id}, '${s.full_name}')" data-role-required="super_admin"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            </tr>
-            `;
-        }).join('');
-
+        state.students.allStudents = res.data || [];
+        updateSortIcons();
+        renderStudentTable(state.students.allStudents);
         renderPagination('student-pagination', res.meta, loadStudents);
     } catch (err) {
         showToast('Failed to load student records', 'error');
     }
+}
+
+function renderStudentRow(s) {
+    const hasRealEmail = s.email && !s.email.endsWith('@student.local');
+    const contactText = hasRealEmail ? s.email : (s.phone ? 'Phone: ' + s.phone : 'No Contact Info');
+    const std = s.standard || ((s.semester === 12 || s.semester === 2) ? '12th' : '11th');
+    const strm = s.stream || s.department_name || 'Science';
+
+    return `
+    <tr>
+        <td><strong>${s.roll_number}</strong></td>
+        <td>
+            <div style="font-weight: 600;">${s.full_name}</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">${contactText}</div>
+        </td>
+        <td><span class="badge" style="background: #1E293B; border: 1px solid #334155; color: #E2E8F0;">${std}</span></td>
+        <td><span class="badge" style="background: #1E293B; border: 1px solid #334155; color: #E2E8F0;">${strm}</span></td>
+        <td><span class="badge badge-${s.status}">${s.status}</span></td>
+        <td>
+            ${s.document_path ? `<a href="${s.document_path}" target="_blank" class="btn btn-sm btn-secondary"><i class="fas fa-file-pdf"></i> Doc</a>` : '<span style="color: var(--text-dim);">None</span>'}
+        </td>
+        <td>
+            <div style="display: flex; gap: 0.35rem;">
+                <button class="btn btn-sm btn-secondary" onclick="openStudentModal(${s.id})"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id}, '${s.full_name}')" data-role-required="super_admin"><i class="fas fa-trash"></i></button>
+            </div>
+        </td>
+    </tr>
+    `;
+}
+
+function renderStudentTable(students) {
+    const tableBody = document.getElementById('student-table-body');
+    if (!tableBody) return;
+
+    if (!students || students.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">No students found matching your criteria.</td></tr>`;
+        return;
+    }
+
+    // 1. Column Sort Active: Flat sorted list
+    if (state.students.sortBy) {
+        const sorted = [...students].sort((a, b) => {
+            const stdA = a.standard || ((a.semester === 12 || a.semester === 2) ? '12th' : '11th');
+            const stdB = b.standard || ((b.semester === 12 || b.semester === 2) ? '12th' : '11th');
+            const strmA = a.stream || a.department_name || '';
+            const strmB = b.stream || b.department_name || '';
+
+            let cmp = 0;
+            if (state.students.sortBy === 'standard') {
+                cmp = stdA.localeCompare(stdB);
+                if (cmp === 0) cmp = strmA.localeCompare(strmB);
+            } else if (state.students.sortBy === 'stream') {
+                cmp = strmA.localeCompare(strmB);
+                if (cmp === 0) cmp = stdA.localeCompare(stdB);
+            }
+            return state.students.sortOrder === 'asc' ? cmp : -cmp;
+        });
+
+        tableBody.innerHTML = sorted.map(renderStudentRow).join('');
+        return;
+    }
+
+    // 2. Default View: Grouped by Standard (11th, 12th) then Stream (Science, Commerce, Arts)
+    const groups = [
+        { std: '11th', stream: 'Science', label: '11th — Science' },
+        { std: '11th', stream: 'Commerce', label: '11th — Commerce' },
+        { std: '11th', stream: 'Arts', label: '11th — Arts' },
+        { std: '12th', stream: 'Science', label: '12th — Science' },
+        { std: '12th', stream: 'Commerce', label: '12th — Commerce' },
+        { std: '12th', stream: 'Arts', label: '12th — Arts' }
+    ];
+
+    const currentStdFilter = document.getElementById('filter-student-standard')?.value || '';
+    const currentStreamFilter = document.getElementById('filter-student-stream')?.value || '';
+
+    let html = '';
+    let renderedCount = 0;
+
+    groups.forEach(g => {
+        if (currentStdFilter && g.std !== currentStdFilter) return;
+        if (currentStreamFilter && g.stream !== currentStreamFilter) return;
+
+        const groupStudents = students.filter(s => {
+            const std = s.standard || ((s.semester === 12 || s.semester === 2) ? '12th' : '11th');
+            const strm = s.stream || s.department_name || '';
+            return std.toLowerCase() === g.std.toLowerCase() && strm.toLowerCase() === g.stream.toLowerCase();
+        });
+
+        if (groupStudents.length > 0 || (currentStdFilter && currentStreamFilter)) {
+            html += `
+            <tr class="table-group-header" style="background: rgba(30, 41, 59, 0.75);">
+                <td colspan="7" style="padding: 0.65rem 1.25rem; font-weight: 700; color: #93C5FD; border-top: 1px solid #334155; border-bottom: 1px solid #334155;">
+                    <i class="fas fa-layer-group" style="margin-right: 0.5rem; color: #60A5FA;"></i>
+                    ${g.label}
+                    <span class="badge" style="background: #0F172A; border: 1px solid #334155; color: #94A3B8; font-size: 0.72rem; margin-left: 0.6rem; font-weight: 500;">
+                        ${groupStudents.length} student${groupStudents.length === 1 ? '' : 's'}
+                    </span>
+                </td>
+            </tr>
+            `;
+
+            if (groupStudents.length > 0) {
+                html += groupStudents.map(renderStudentRow).join('');
+                renderedCount += groupStudents.length;
+            } else {
+                html += `<tr><td colspan="7" style="text-align: center; color: var(--text-dim); font-size: 0.85rem; padding: 1rem;">No students in this group.</td></tr>`;
+            }
+        }
+    });
+
+    const otherStudents = students.filter(s => {
+        const std = s.standard || ((s.semester === 12 || s.semester === 2) ? '12th' : '11th');
+        const strm = s.stream || s.department_name || '';
+        return !groups.some(g => g.std.toLowerCase() === std.toLowerCase() && g.stream.toLowerCase() === strm.toLowerCase());
+    });
+
+    if (otherStudents.length > 0) {
+        html += `
+        <tr class="table-group-header" style="background: rgba(30, 41, 59, 0.75);">
+            <td colspan="7" style="padding: 0.65rem 1.25rem; font-weight: 700; color: #93C5FD; border-top: 1px solid #334155; border-bottom: 1px solid #334155;">
+                <i class="fas fa-layer-group" style="margin-right: 0.5rem; color: #60A5FA;"></i>
+                Other Students
+                <span class="badge" style="background: #0F172A; border: 1px solid #334155; color: #94A3B8; font-size: 0.72rem; margin-left: 0.6rem; font-weight: 500;">
+                    ${otherStudents.length} student${otherStudents.length === 1 ? '' : 's'}
+                </span>
+            </td>
+        </tr>
+        `;
+        html += otherStudents.map(renderStudentRow).join('');
+        renderedCount += otherStudents.length;
+    }
+
+    if (renderedCount === 0 && (!currentStdFilter || !currentStreamFilter)) {
+        html = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">No students found matching your criteria.</td></tr>`;
+    }
+
+    tableBody.innerHTML = html;
 }
 
 function editStudent(id) {
@@ -275,6 +576,14 @@ function openStudentModal(id = null) {
     document.getElementById('student-form').reset();
     document.getElementById('student-id').value = id || '';
     document.getElementById('modal-student-title').textContent = id ? 'Edit Student Record' : 'Add New Student';
+    clearStudentValidationErrors();
+    populateYearPicker();
+    handleStandardChange();
+
+    const phoneInput = document.getElementById('modal-student-phone');
+    if (phoneInput) {
+        phoneInput.oninput = () => clearFieldError('modal-student-phone', 'error-student-phone');
+    }
 
     if (id) {
         apiRequest(`/api/students/${id}`).then(res => {
@@ -285,11 +594,22 @@ function openStudentModal(id = null) {
                 const hasRealEmail = s.email && !s.email.endsWith('@student.local');
                 document.getElementById('modal-student-email').value = hasRealEmail ? s.email : '';
                 document.getElementById('modal-student-phone').value = s.phone || '';
-                document.getElementById('modal-student-dept').value = s.department_id || '';
-                if (document.getElementById('modal-student-sem')) {
-                    document.getElementById('modal-student-sem').value = s.semester || 1;
+
+                const stdVal = s.standard || ((s.semester === 12 || s.semester === 2) ? '12th' : '11th');
+                document.getElementById('modal-student-standard').value = stdVal;
+                handleStandardChange();
+
+                let streamVal = s.stream || s.department_name;
+                if (!streamVal && s.department_id && state.departments.length > 0) {
+                    const d = state.departments.find(dept => dept.id === s.department_id);
+                    if (d) streamVal = d.name;
                 }
-                document.getElementById('modal-student-year').value = s.enrollment_year || 2026;
+                if (streamVal) {
+                    document.getElementById('modal-student-stream').value = streamVal;
+                    handleStreamChange();
+                }
+
+                populateYearPicker(s.enrollment_year);
                 document.getElementById('modal-student-status').value = s.status || 'active';
             }
         });
@@ -300,8 +620,22 @@ function openStudentModal(id = null) {
 
 async function saveStudent(e) {
     e.preventDefault();
+
+    if (!validateStudentForm()) {
+        return;
+    }
+
     const id = document.getElementById('student-id').value;
-    const formData = new FormData(document.getElementById('student-form'));
+    const form = document.getElementById('student-form');
+    const formData = new FormData(form);
+
+    const streamVal = document.getElementById('modal-student-stream').value;
+    if (streamVal && state.departments.length > 0) {
+        const deptObj = state.departments.find(d => d.name.toLowerCase() === streamVal.toLowerCase());
+        if (deptObj) {
+            formData.set('department_id', deptObj.id);
+        }
+    }
 
     try {
         const url = id ? `/api/students/${id}` : '/api/students';

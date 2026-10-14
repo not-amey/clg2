@@ -9,11 +9,13 @@ const { success, error } = require('../utils/response');
 async function getAll(req, res) {
     try {
         const page = parseInt(req.query.page || '1', 10);
-        const limit = parseInt(req.query.limit || '10', 10);
+        const limit = parseInt(req.query.limit || '50', 10);
         const offset = (page - 1) * limit;
 
         const search = req.query.search ? req.query.search.trim() : null;
-        const deptId = req.query.department_id ? parseInt(req.query.department_id, 10) : null;
+        let deptId = req.query.department_id ? parseInt(req.query.department_id, 10) : null;
+        const stream = req.query.stream ? req.query.stream.trim() : null;
+        const standard = req.query.standard ? req.query.standard.trim() : null;
         const status = req.query.status || null;
 
         let query = supabase
@@ -21,11 +23,22 @@ async function getAll(req, res) {
             .select('*, departments(name, code)', { count: 'exact' });
 
         if (search) {
-            query = query.or(`roll_number.ilike.%${search}%,full_name.ilike.%${search}%,email.ilike.%${search}%`);
-        }
+            // Search across all students regardless of filter
+            query = query.or(`roll_number.ilike.%${search}%,full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+        } else {
+            if (!deptId && stream) {
+                const { data: dept } = await supabase.from('departments').select('id').ilike('name', stream).maybeSingle();
+                if (dept) deptId = dept.id;
+            }
 
-        if (deptId) {
-            query = query.eq('department_id', deptId);
+            if (deptId) {
+                query = query.eq('department_id', deptId);
+            }
+
+            if (standard) {
+                const is12 = standard.includes('12');
+                query = is12 ? query.in('semester', [12, 2]) : query.in('semester', [11, 1]);
+            }
         }
 
         if (status) {
@@ -40,12 +53,18 @@ async function getAll(req, res) {
         const totalItems = count || 0;
         const totalPages = Math.ceil(totalItems / limit) || 1;
 
-        const students = (data || []).map(s => ({
-            ...s,
-            department_name: s.departments ? s.departments.name : null,
-            department_code: s.departments ? s.departments.code : null,
-            departments: undefined
-        }));
+        const students = (data || []).map(s => {
+            const is12 = s.semester === 12 || s.semester === 2;
+            const deptName = s.departments ? s.departments.name : null;
+            return {
+                ...s,
+                department_name: deptName,
+                department_code: s.departments ? s.departments.code : null,
+                standard: is12 ? '12th' : '11th',
+                stream: deptName || 'Science',
+                departments: undefined
+            };
+        });
 
         return success(res, students, 'Students fetched successfully', 200, {
             page,
@@ -74,10 +93,15 @@ async function getById(req, res) {
             return error(res, 'Student record not found.', 404);
         }
 
+        const is12 = s.semester === 12 || s.semester === 2;
+        const deptName = s.departments ? s.departments.name : null;
+
         const student = {
             ...s,
-            department_name: s.departments ? s.departments.name : null,
+            department_name: deptName,
             department_code: s.departments ? s.departments.code : null,
+            standard: is12 ? '12th' : '11th',
+            stream: deptName || 'Science',
             departments: undefined
         };
 
@@ -93,11 +117,26 @@ async function getById(req, res) {
  */
 async function create(req, res) {
     try {
-        const { roll_number, full_name, email, phone, department_id, semester, enrollment_year, status } = req.body;
+        const { roll_number, full_name, email, phone, department_id, stream, standard, semester, enrollment_year, status } = req.body;
         
         let document_path = null;
         if (req.file) {
             document_path = await uploadToSupabase(req.file.buffer, req.file.originalname, req.file.mimetype, 'student_documents');
+        }
+
+        let resolvedDeptId = department_id ? parseInt(department_id, 10) : null;
+        if (!resolvedDeptId && stream) {
+            const { data: dept } = await supabase.from('departments').select('id').ilike('name', stream.trim()).maybeSingle();
+            if (dept) resolvedDeptId = dept.id;
+        }
+
+        let sem = 11;
+        if (standard) {
+            const stdStr = standard.toString().toLowerCase();
+            sem = (stdStr.includes('12') || stdStr === '12th' || stdStr === '12') ? 12 : 11;
+        } else if (semester) {
+            const sInt = parseInt(semester, 10);
+            sem = (sInt === 12 || sInt === 2) ? 12 : 11;
         }
 
         const hasCustomEmail = email && email.trim();
@@ -125,8 +164,8 @@ async function create(req, res) {
                 full_name,
                 email: cleanEmail,
                 phone: phone ? phone.trim() : null,
-                department_id: department_id ? parseInt(department_id, 10) : null,
-                semester: parseInt(semester, 10) || 1,
+                department_id: resolvedDeptId,
+                semester: sem,
                 enrollment_year: parseInt(enrollment_year, 10) || new Date().getFullYear(),
                 status: status || 'active',
                 document_path
@@ -159,11 +198,26 @@ async function create(req, res) {
 async function update(req, res) {
     try {
         const studentId = req.params.id;
-        const { roll_number, full_name, email, phone, department_id, semester, enrollment_year, status } = req.body;
+        const { roll_number, full_name, email, phone, department_id, stream, standard, semester, enrollment_year, status } = req.body;
 
         const { data: current } = await supabase.from('students').select('*').eq('id', studentId).single();
         if (!current) {
             return error(res, 'Student not found.', 404);
+        }
+
+        let resolvedDeptId = department_id ? parseInt(department_id, 10) : (current.department_id || null);
+        if (stream) {
+            const { data: dept } = await supabase.from('departments').select('id').ilike('name', stream.trim()).maybeSingle();
+            if (dept) resolvedDeptId = dept.id;
+        }
+
+        let sem = current.semester || 11;
+        if (standard) {
+            const stdStr = standard.toString().toLowerCase();
+            sem = (stdStr.includes('12') || stdStr === '12th' || stdStr === '12') ? 12 : 11;
+        } else if (semester) {
+            const sInt = parseInt(semester, 10);
+            sem = (sInt === 12 || sInt === 2) ? 12 : 11;
         }
 
         const hasCustomEmail = email && email.trim();
@@ -196,9 +250,9 @@ async function update(req, res) {
                 roll_number,
                 full_name,
                 email: cleanEmail,
-                phone: phone || null,
-                department_id: department_id ? parseInt(department_id, 10) : null,
-                semester: parseInt(semester, 10) || current.semester || 1,
+                phone: phone ? phone.trim() : null,
+                department_id: resolvedDeptId,
+                semester: sem,
                 enrollment_year: parseInt(enrollment_year, 10) || current.enrollment_year,
                 status: status || current.status,
                 document_path

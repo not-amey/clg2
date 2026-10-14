@@ -1058,3 +1058,11 @@ textarea.form-control {
         font-size: 13px;
     }
 }
+
+/* Students Tab: Sortable Headers */
+#th-student-standard:hover,
+#th-student-stream:hover {
+    color: #FFF;
+    background: #24344D;
+}
+

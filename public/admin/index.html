@@ -131,12 +131,20 @@
                         <div class="filter-group">
                             <div class="search-box">
                                 <i class="fas fa-search"></i>
-                                <input type="text" id="search-student" placeholder="Search by name, roll no, email..." onkeyup="loadStudents(1)">
+                                <input type="text" id="search-student" placeholder="Search by name, roll no, email, phone..." oninput="handleStudentSearch()">
                             </div>
-                            <select id="filter-student-dept" class="select-control" onchange="loadStudents(1)">
-                                <option value="">All Departments</option>
+                            <select id="filter-student-standard" class="select-control" onchange="handleStudentFilterChange()">
+                                <option value="">All Standards</option>
+                                <option value="11th">11th</option>
+                                <option value="12th">12th</option>
                             </select>
-                            <select id="filter-student-status" class="select-control" onchange="loadStudents(1)">
+                            <select id="filter-student-stream" class="select-control" onchange="handleStudentFilterChange()">
+                                <option value="">All Streams</option>
+                                <option value="Arts">Arts</option>
+                                <option value="Commerce">Commerce</option>
+                                <option value="Science">Science</option>
+                            </select>
+                            <select id="filter-student-status" class="select-control" onchange="handleStudentFilterChange()">
                                 <option value="">All Statuses</option>
                                 <option value="active">Active</option>
                                 <option value="suspended">Suspended</option>
@@ -149,12 +157,17 @@
 
                     <div class="glass-card">
                         <div class="table-responsive">
-                            <table class="custom-table">
+                            <table class="custom-table" id="students-table">
                                 <thead>
                                     <tr>
                                         <th>Roll Number</th>
                                         <th>Student Info</th>
-                                        <th>Department / Stream</th>
+                                        <th id="th-student-standard" onclick="sortStudentsBy('standard')" style="cursor: pointer; user-select: none;" title="Click to sort by Standard">
+                                            Standard <i class="fas fa-sort" id="sort-icon-standard" style="margin-left: 0.35rem; font-size: 0.75rem; color: #94A3B8;"></i>
+                                        </th>
+                                        <th id="th-student-stream" onclick="sortStudentsBy('stream')" style="cursor: pointer; user-select: none;" title="Click to sort by Stream">
+                                            Stream <i class="fas fa-sort" id="sort-icon-stream" style="margin-left: 0.35rem; font-size: 0.75rem; color: #94A3B8;"></i>
+                                        </th>
                                         <th>Status</th>
                                         <th>Document</th>
                                         <th>Actions</th>
@@ -403,7 +416,7 @@
                 <h3 id="modal-student-title">Add New Student</h3>
                 <button class="close-modal" onclick="closeModal('modal-student')">&times;</button>
             </div>
-            <form id="student-form" onsubmit="saveStudent(event)">
+            <form id="student-form" onsubmit="saveStudent(event)" novalidate>
                 <input type="hidden" id="student-id" name="id">
                 <div class="form-grid">
                     <div class="form-group">
@@ -419,16 +432,35 @@
                         <input type="email" id="modal-student-email" name="email" class="form-control" placeholder="Optional">
                     </div>
                     <div class="form-group">
-                        <label>Phone Number</label>
-                        <input type="text" id="modal-student-phone" name="phone" class="form-control" placeholder="Optional">
+                        <label>Phone Number *</label>
+                        <input type="tel" id="modal-student-phone" name="phone" class="form-control" placeholder="e.g. 9876543210" required>
+                        <span class="inline-error" id="error-student-phone" style="display: none; color: #EF4444; font-size: 0.78rem; margin-top: 0.25rem;"></span>
                     </div>
                     <div class="form-group">
-                        <label>Department / Stream *</label>
-                        <select id="modal-student-dept" name="department_id" class="form-control" required></select>
+                        <label>Standard *</label>
+                        <select id="modal-student-standard" name="standard" class="form-control" required onchange="handleStandardChange()">
+                            <option value="">Select Standard</option>
+                            <option value="11th">11th</option>
+                            <option value="12th">12th</option>
+                        </select>
+                        <span class="inline-error" id="error-student-standard" style="display: none; color: #EF4444; font-size: 0.78rem; margin-top: 0.25rem;"></span>
                     </div>
+                    <div class="form-group">
+                        <label>Stream *</label>
+                        <select id="modal-student-stream" name="stream" class="form-control" required disabled onchange="handleStreamChange()">
+                            <option value="">Select Standard first</option>
+                            <option value="Arts">Arts</option>
+                            <option value="Commerce">Commerce</option>
+                            <option value="Science">Science</option>
+                        </select>
+                        <span class="inline-error" id="error-student-stream" style="display: none; color: #EF4444; font-size: 0.78rem; margin-top: 0.25rem;"></span>
+                    </div>
+                    <input type="hidden" id="modal-student-dept" name="department_id">
                     <div class="form-group">
                         <label>Enrollment Year *</label>
-                        <input type="number" id="modal-student-year" name="enrollment_year" min="2000" max="2100" value="2026" class="form-control" required>
+                        <select id="modal-student-year" name="enrollment_year" class="form-control" required>
+                            <!-- Dynamically generated year options -->
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Status *</label>
@@ -439,7 +471,7 @@
                     </div>
                     <div class="form-group full-width">
                         <label>Upload Student Document (PDF / Image) (Optional)</label>
-                        <input type="file" name="document" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                        <input type="file" id="modal-student-doc" name="document" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
                     </div>
                 </div>
                 <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">

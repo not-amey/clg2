@@ -42,9 +42,21 @@ const studentRules = [
     body('roll_number').trim().notEmpty().withMessage('Roll number is required.').escape(),
     body('full_name').trim().notEmpty().withMessage('Full name is required.').escape(),
     body('email').optional({ checkFalsy: true }).trim().isEmail().withMessage('Valid email format required.').normalizeEmail(),
-    body('phone').optional({ checkFalsy: true }).trim().escape(),
-    body('department_id').isInt().withMessage('Department ID must be an integer.'),
-    body('semester').optional({ checkFalsy: true }).isInt({ min: 1, max: 10 }).withMessage('Semester must be between 1 and 10.'),
+    body('phone')
+        .trim()
+        .notEmpty().withMessage('Phone number is required.')
+        .custom(val => {
+            const digits = val.replace(/\D/g, '');
+            if (digits.length < 10 || digits.length > 15) {
+                throw new Error('Phone number must contain a valid digit count (10-15 digits).');
+            }
+            return true;
+        })
+        .escape(),
+    body('standard').optional({ checkFalsy: true }).isIn(['11th', '12th', '11', '12', 11, 12]).withMessage('Standard must be 11th or 12th.'),
+    body('stream').optional({ checkFalsy: true }).isIn(['Arts', 'Commerce', 'Science']).withMessage('Stream must be Arts, Commerce, or Science.'),
+    body('department_id').optional({ checkFalsy: true }).isInt().withMessage('Department ID must be an integer.'),
+    body('semester').optional({ checkFalsy: true }).isInt({ min: 1, max: 12 }).withMessage('Semester must be between 1 and 12.'),
     body('enrollment_year').isInt({ min: 2000, max: 2100 }).withMessage('Valid enrollment year required.'),
     body('status').optional().isIn(['active', 'suspended']).withMessage('Invalid status.')
 ];
