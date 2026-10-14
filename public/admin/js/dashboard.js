@@ -514,7 +514,13 @@ function renderStudentRow(s) {
             ${s.document_path ? `<a href="${s.document_path}" target="_blank" class="btn btn-sm btn-secondary"><i class="fas fa-file-pdf"></i> Doc</a>` : '<span style="color: var(--text-dim);">None</span>'}
         </td>
         <td>
-            <div style="display: flex; gap: 0.35rem;">
+            <div style="display: flex; gap: 0.35rem; align-items: center;">
+                <button class="btn btn-sm btn-secondary" onclick="downloadStudentExcel(${s.id})" title="Download Excel" aria-label="Download Excel">
+                    <i class="fas fa-file-excel" style="color: #10B981;"></i>
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="downloadStudentPDF(${s.id})" title="Download PDF" aria-label="Download PDF">
+                    <i class="fas fa-file-pdf" style="color: #EF4444;"></i>
+                </button>
                 <button class="btn btn-sm btn-secondary" onclick="openStudentModal(${s.id})"><i class="fas fa-edit"></i> Edit</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id}, '${s.full_name}')" data-role-required="super_admin"><i class="fas fa-trash"></i></button>
             </div>
@@ -762,6 +768,210 @@ async function deleteStudent(id, name) {
     } catch (err) {
         showToast(err.message, 'error');
     }
+}
+
+function formatStudentFileName(fullName, rollNumber, ext) {
+    const cleanName = (fullName || 'Student').trim().replace(/\s+/g, '_').replace(/[/\\?%*:|"<>]/g, '');
+    const cleanRoll = (rollNumber || 'Roll').trim().replace(/\s+/g, '_').replace(/[/\\?%*:|"<>]/g, '');
+    return `${cleanName}_${cleanRoll}.${ext}`;
+}
+
+function getStudentDownloadData(s) {
+    const hasRealEmail = s.email && !s.email.endsWith('@student.local');
+    const std = s.standard || ((s.semester === 12 || s.semester === 2) ? '12th' : '11th');
+    const strm = s.stream || s.department_name || 'Science';
+    const div = s.division || 'A';
+    const phone = s.phone || 'Not Provided';
+    const email = hasRealEmail ? s.email : 'Not Provided';
+    const year = s.enrollment_year ? String(s.enrollment_year) : 'N/A';
+    const status = (s.status || 'active').charAt(0).toUpperCase() + (s.status || 'active').slice(1);
+    const date = s.created_at ? new Date(s.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+    const documentStatus = s.document_path ? 'Uploaded' : 'None';
+
+    return {
+        fullName: s.full_name || 'N/A',
+        rollNumber: s.roll_number || 'N/A',
+        standard: std,
+        stream: strm,
+        division: div,
+        phone,
+        email,
+        enrollmentYear: year,
+        status,
+        documentStatus,
+        date
+    };
+}
+
+async function getStudentForDownload(id) {
+    let s = (state.students.allStudents || []).find(st => st.id === id);
+    if (!s) {
+        try {
+            const res = await apiRequest(`/api/students/${id}`);
+            if (res.success) s = res.data;
+        } catch (err) {
+            console.error('Failed to fetch student:', err);
+        }
+    }
+    return s;
+}
+
+async function downloadStudentExcel(id) {
+    const s = await getStudentForDownload(id);
+    if (!s) {
+        showToast('Student record not found.', 'error');
+        return;
+    }
+
+    if (typeof XLSX === 'undefined') {
+        showToast('Excel library not loaded. Please refresh.', 'error');
+        return;
+    }
+
+    const d = getStudentDownloadData(s);
+    const rows = [
+        ['SHRIMAN G. R. WARANGE JUNIOR COLLEGE'],
+        ['STUDENT OFFICIAL RECORD'],
+        [],
+        ['Field', 'Details'],
+        ['Full Name', d.fullName],
+        ['Roll Number', d.rollNumber],
+        ['Standard', d.standard],
+        ['Stream', d.stream],
+        ['Division', d.division],
+        ['Phone Number', d.phone],
+        ['Email Address', d.email],
+        ['Enrollment Year', d.enrollmentYear],
+        ['Status', d.status],
+        ['Document Uploaded', d.documentStatus],
+        ['Record Date', d.date]
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    worksheet['!cols'] = [{ wch: 22 }, { wch: 38 }];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Student');
+
+    const fileName = formatStudentFileName(d.fullName, d.rollNumber, 'xlsx');
+    XLSX.writeFile(workbook, fileName);
+    showToast(`Downloaded ${fileName}`, 'success');
+}
+
+async function downloadStudentPDF(id) {
+    const s = await getStudentForDownload(id);
+    if (!s) {
+        showToast('Student record not found.', 'error');
+        return;
+    }
+
+    const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    if (!jsPDFClass) {
+        showToast('PDF library not loaded. Please refresh.', 'error');
+        return;
+    }
+
+    const d = getStudentDownloadData(s);
+    const doc = new jsPDFClass({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
+
+    // Top Header Block
+    doc.setFillColor(30, 41, 59); // Slate-800
+    doc.rect(margin, 16, contentWidth, 24, 'F');
+
+    // College Name
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text('SHRIMAN G. R. WARANGE JUNIOR COLLEGE', pageWidth / 2, 25, { align: 'center' });
+
+    // College Subtitle
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(203, 213, 225);
+    doc.text('Administrative Management System • Official Student Record', pageWidth / 2, 33, { align: 'center' });
+
+    // Section Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(30, 58, 138); // Dark blue
+    doc.text('STUDENT PROFILE', margin, 49);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, pageWidth - margin, 49, { align: 'right' });
+
+    // Divider Line
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.4);
+    doc.line(margin, 52, pageWidth - margin, 52);
+
+    // Table rows
+    const items = [
+        ['Full Name', d.fullName],
+        ['Roll Number', d.rollNumber],
+        ['Standard', d.standard],
+        ['Stream', d.stream],
+        ['Division', `Division ${d.division}`],
+        ['Phone Number', d.phone],
+        ['Email Address', d.email],
+        ['Enrollment Year', d.enrollmentYear],
+        ['Status', d.status],
+        ['Admission Date', d.date]
+    ];
+
+    const startY = 58;
+    const rowHeight = 9.5;
+    const col1Width = 48;
+
+    items.forEach((item, index) => {
+        const y = startY + (index * rowHeight);
+
+        // Alternating background
+        if (index % 2 === 0) {
+            doc.setFillColor(248, 250, 252);
+            doc.rect(margin, y - 6, contentWidth, rowHeight, 'F');
+        }
+
+        // Bottom line
+        doc.setDrawColor(241, 245, 249);
+        doc.line(margin, y + 3.5, pageWidth - margin, y + 3.5);
+
+        // Label
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(71, 85, 105);
+        doc.text(item[0], margin + 4, y);
+
+        // Value
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(15, 23, 42);
+        doc.text(String(item[1]), margin + col1Width + 4, y);
+    });
+
+    // Outer table border
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.4);
+    doc.rect(margin, startY - 6, contentWidth, items.length * rowHeight);
+
+    // Footer
+    const footerY = startY + (items.length * rowHeight) + 16;
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text('This is a computer-generated document from Shriman G. R. Warange Junior College portal.', pageWidth / 2, footerY, { align: 'center' });
+
+    const fileName = formatStudentFileName(d.fullName, d.rollNumber, 'pdf');
+    doc.save(fileName);
+    showToast(`Downloaded ${fileName}`, 'success');
 }
 
 /* ================= 3. FACULTY ================= */
